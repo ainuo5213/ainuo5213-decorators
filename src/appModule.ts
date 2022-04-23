@@ -1,1 +1,1 @@
-import "./controllers/UserModule";
+export { User1Module } from "./controllers/UserModule";

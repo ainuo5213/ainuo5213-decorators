@@ -5,8 +5,10 @@ import Application from "koa";
 
 export default class Router extends KoaRouter {
   public registerRoute() {
+    manager.flushJob();
     const routes = manager.getManagedRoutes();
     routes.forEach((route: ManagedRoute) => {
+      manager.flushJob();
       const prefix = manager.getManagedController(route.controller);
       let requestPath = route.path;
       if (prefix) {

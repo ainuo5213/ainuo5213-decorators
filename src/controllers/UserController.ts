@@ -6,7 +6,7 @@ import {
   Body,
   Params,
 } from "../route-manager/decorators";
-@Controller("")
+@Controller("user")
 export default class UserControler {
   @Get("/user/:id")
   public async getUser(
