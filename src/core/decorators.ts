@@ -10,6 +10,7 @@ import {
   RouteType,
   StaticOption,
 } from "./types";
+import { join } from "path";
 function createManageRoute(
   path: string,
   target: any,
@@ -110,8 +111,15 @@ export function Cors(
   };
 }
 
-export function Static(staticOption: StaticOption) {
+export function Static(staticOption: StaticOption | string) {
   return (target: Object | Function, methodName?: string) => {
+    if (typeof staticOption === "string") {
+      staticOption = {
+        path: staticOption,
+        staticPath: staticOption,
+        encoding: "utf-8",
+      };
+    }
     const scope =
       typeof target === "function" ? StaticScope.module : StaticScope.method;
     manager.registerStatic({

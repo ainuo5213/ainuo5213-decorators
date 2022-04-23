@@ -5,11 +5,11 @@ import UserControler from "./UserController";
 @Module({
   controllers: [UserControler],
 })
-@Static({
-  path: "/static",
-  staticPath: path.join(process.cwd(), '/src/static'),
-  encoding: "utf-8"
-})
+// @Static({
+//   path: "/static",
+//   staticPath: path.join(process.cwd(), '/src/static'),
+//   encoding: "utf-8"
+// })
 export class User1Module {
   constructor() {}
 }

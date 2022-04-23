@@ -16,7 +16,7 @@ import {
 })
 export default class UserControler {
  
-  @Get("/user/:id")
+  @Get("user/:id")
   public async getUser(
     @Query("age") age: number,
     @Header("uId") uId: string,
@@ -31,6 +31,6 @@ export default class UserControler {
     };
   }
 
-  // @Static("/static/1.txt")
+  @Static("/static/1.txt")
   public async getText() {}
 }

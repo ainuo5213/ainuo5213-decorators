@@ -31,9 +31,12 @@ export default class AppFactory {
       const prefix = manager.getManagedController(route.controller);
       let requestPath = route.path;
       if (prefix) {
-        requestPath = `${prefix.prefix === "" ? "" : `/${prefix.prefix}`}${
-          requestPath.startsWith("/") ? requestPath : `/${requestPath}`
-        }`;
+        if (!requestPath.startsWith("/")) {
+          requestPath = `${
+            prefix.prefix === "" ? "" : `/${prefix.prefix}`
+          }/${requestPath}
+          `;
+        }
       }
       router[route.method](
         requestPath,
@@ -73,7 +76,6 @@ export default class AppFactory {
             });
           }
 
-          
           // cors policy
           const controllerPolicy = manager.getControllerCorsPolicy(
             route.controller
