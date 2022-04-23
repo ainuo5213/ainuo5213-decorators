@@ -1,16 +1,16 @@
 import { ManagedRoute, ParamFromTypes } from "./types";
 import KoaRouter from "koa-router";
-import manager from "./index";
+import manager from "./manager";
 import Application from "koa";
 
 export default class Router extends KoaRouter {
   public registerRoute() {
     const routes = manager.getManagedRoutes();
     routes.forEach((route: ManagedRoute) => {
-      const prefix = manager.getManagedPrefix(route.constructor.name);
+      const prefix = manager.getManagedController(route.controller);
       let requestPath = route.path;
       if (prefix) {
-        requestPath = `/${prefix.prefix}${
+        requestPath = `${prefix.prefix === "" ? "" : `/${prefix.prefix}`}${
           requestPath.startsWith("/") ? requestPath : `/${requestPath}`
         }`;
       }
@@ -24,7 +24,7 @@ export default class Router extends KoaRouter {
           >
         ) => {
           const managedParams = manager.getManagedParam(
-            route.constructor.name,
+            route.controller,
             route.callee.name
           );
           let args = [];

@@ -3,12 +3,18 @@ export interface ManagedRoute {
   method: string;
   callee: Function;
   constructor: Function;
+  controller: string;
 }
 
-export interface ManagedPrefix {
+export interface ManagedController {
   prefix: string;
   constructor: Function;
   controller: string;
+}
+
+export interface ManagedModule {
+  moduleName: string;
+  controllers: Array<Function>;
 }
 
 export interface ManagedQueries {
@@ -33,5 +39,10 @@ export enum ParamFromTypes {
   Header = 0,
   Query = 1,
   Params = 2,
-  Body = 3
+  Body = 3,
+}
+
+export interface ModuleOptions {
+  controllers?: Array<Function>;
+  name?: string;
 }

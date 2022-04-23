@@ -1,5 +1,10 @@
-import manager from "../index";
-import { ManagedRoute, HttpMethod, ParamFromTypes } from "../types";
+import manager from "./manager";
+import {
+  ManagedRoute,
+  HttpMethod,
+  ParamFromTypes,
+  ModuleOptions,
+} from "./types";
 function createManageRoute(
   path: string,
   target: any,
@@ -9,6 +14,7 @@ function createManageRoute(
   const route: ManagedRoute = {
     method: method,
     constructor: target.constructor,
+    controller: target.constructor.name,
     callee: target[methodName],
     path: path || methodName,
   };
@@ -70,12 +76,13 @@ export function Delete(path?: string) {
   };
 }
 
-export function Prefix(prefix?: string) {
+export function Controller(prefix?: string) {
   if (prefix.startsWith("/")) {
     throw new Error("前缀不能以/开头");
   }
   return (target: Function) => {
-    manager.registerPrefix({
+    
+    manager.registerController({
       prefix: prefix || "",
       constructor: target,
       controller: target.name,
@@ -140,5 +147,17 @@ export function Params(param?: string) {
         ParamFromTypes.Params
       )
     );
+  };
+}
+
+export function Module(options?: ModuleOptions) {
+  return (target: Function) => {
+    if (!options) {
+      return;
+    }
+    manager.registerModule({
+      moduleName: options.name || target.name,
+      controllers: [...new Set(options.controllers)],
+    });
   };
 }
