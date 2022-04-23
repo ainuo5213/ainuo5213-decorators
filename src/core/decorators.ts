@@ -5,7 +5,10 @@ import {
   ParamFromTypes,
   ModuleOptions,
   CorsOptions,
-  CorsScope,
+  DecoratorScope,
+  StaticScope,
+  RouteType,
+  StaticOption,
 } from "./types";
 function createManageRoute(
   path: string,
@@ -19,6 +22,9 @@ function createManageRoute(
     controller: target.constructor.name,
     callee: target[methodName],
     path: path || methodName,
+    routeType: RouteType.route,
+    encoding: "utf-8",
+    staticFilePath: "",
   };
   return route;
 }
@@ -89,15 +95,35 @@ export function Cors(
 ) {
   return (target: Object | Function, methodName?: string) => {
     const scope =
-      typeof target === "function" ? CorsScope.controller : CorsScope.method;
+      typeof target === "function"
+        ? DecoratorScope.controller
+        : DecoratorScope.method;
     manager.registerCorsPolicy({
       policy: options,
-      methodName: scope === CorsScope.method ? methodName : "",
+      methodName: scope === DecoratorScope.method ? methodName : "",
       controller:
-        scope === CorsScope.method
+        scope === DecoratorScope.method
           ? (target as Object).constructor.name
           : (target as Function).name,
       scope,
+    });
+  };
+}
+
+export function Static(staticOption: StaticOption) {
+  return (target: Object | Function, methodName?: string) => {
+    const scope =
+      typeof target === "function" ? StaticScope.module : StaticScope.method;
+    manager.registerStatic({
+      path: staticOption.path,
+      staticFilePath: staticOption.staticPath,
+      scope,
+      controller:
+        scope === StaticScope.method ? (target as Object).constructor.name : "",
+      methodName: scope === StaticScope.method ? methodName : "",
+      callee: scope === StaticScope.method ? target[methodName] : () => {},
+      constructor: target.constructor,
+      encoding: staticOption.encoding || "utf-8",
     });
   };
 }

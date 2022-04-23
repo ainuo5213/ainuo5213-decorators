@@ -1,9 +1,11 @@
-import { ManagedRoute, ParamFromTypes } from "./types";
+import { ManagedRoute, ParamFromTypes, RouteType } from "./types";
 import Koa from "koa";
 import bodyParser from "koa-bodyparser";
 import KoaRouter from "koa-router";
-import manager from "./manager";
+import manager, { __GLOBAL__ } from "./manager";
 import Application from "koa";
+import { readFile } from "fs/promises";
+import { join } from "path";
 
 type Constructor<T> = new (...args: any[]) => T;
 const CorsPolicies = {
@@ -25,6 +27,7 @@ export default class AppFactory {
     koa.use(router.allowedMethods());
     manager.flushJob();
     const routes = manager.getManagedRoutes();
+    console.log(routes);
     routes.forEach((route: ManagedRoute) => {
       const prefix = manager.getManagedController(route.controller);
       let requestPath = route.path;
@@ -47,26 +50,28 @@ export default class AppFactory {
             route.callee.name
           );
           let args = [];
-          managedParams.forEach((managedParam) => {
-            let paramIndex = managedParam.paramIndex;
-            switch (managedParam.paramFrom) {
-              case ParamFromTypes.Body:
-                args[paramIndex] = ctx.request.body[managedParam.parseName];
-                break;
+          if (managedParams) {
+            managedParams.forEach((managedParam) => {
+              let paramIndex = managedParam.paramIndex;
+              switch (managedParam.paramFrom) {
+                case ParamFromTypes.Body:
+                  args[paramIndex] = ctx.request.body[managedParam.parseName];
+                  break;
 
-              case ParamFromTypes.Header:
-                args[paramIndex] = ctx.headers[managedParam.parseName];
-                break;
+                case ParamFromTypes.Header:
+                  args[paramIndex] = ctx.headers[managedParam.parseName];
+                  break;
 
-              case ParamFromTypes.Params:
-                args[paramIndex] = ctx.params[managedParam.parseName];
-                break;
+                case ParamFromTypes.Params:
+                  args[paramIndex] = ctx.params[managedParam.parseName];
+                  break;
 
-              case ParamFromTypes.Query:
-                args[paramIndex] = ctx.query[managedParam.parseName];
-                break;
-            }
-          });
+                case ParamFromTypes.Query:
+                  args[paramIndex] = ctx.query[managedParam.parseName];
+                  break;
+              }
+            });
+          }
 
           const result = route.callee(...args);
           // cors policy
@@ -89,7 +94,29 @@ export default class AppFactory {
             });
           }
 
-          ctx.body = await Promise.resolve(result);
+          if (route.routeType === RouteType.static) {
+            const filename = ctx.params["filename"];
+            let fileContent = "";
+            if (filename) {
+              ctx.res.setHeader(CorsPolicies.origin, "*");
+              ctx.res.setHeader(CorsPolicies.headers, "*");
+              ctx.res.setHeader(CorsPolicies.maxage, 3600);
+              ctx.res.setHeader(CorsPolicies.method, "get");
+              ctx.res.setHeader(CorsPolicies.credentials, "false");
+              fileContent = await readFile(
+                join(route.staticFilePath, filename),
+                { encoding: route.encoding }
+              );
+            } else {
+              fileContent = await readFile(
+                join(process.cwd(), "src", route.path),
+                { encoding: route.encoding }
+              );
+            }
+            ctx.body = fileContent;
+          } else {
+            ctx.body = await Promise.resolve(result);
+          }
         }
       );
     });

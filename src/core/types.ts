@@ -4,6 +4,14 @@ export interface ManagedRoute {
   callee: Function;
   constructor: Function;
   controller: string;
+  routeType: RouteType;
+  encoding?: BufferEncoding;
+  staticFilePath: string;
+}
+
+export enum RouteType {
+  static = 1,
+  route = 2,
 }
 
 export interface ManagedController {
@@ -33,14 +41,36 @@ export interface CorsOptions {
   maxage?: number;
 }
 
+export interface StaticOption {
+  path: string;
+  staticPath: string;
+  encoding?: BufferEncoding;
+}
+
 export interface ManagedCors {
   policy?: CorsOptions;
   controller: string;
   methodName: string;
-  scope: CorsScope;
+  scope: DecoratorScope;
 }
 
-export enum CorsScope {
+export interface ManagedStatic {
+  path: string;
+  staticFilePath: string;
+  scope: StaticScope;
+  controller?: string;
+  methodName?: string;
+  callee?: Function;
+  constructor?: Function;
+  encoding?: BufferEncoding;
+}
+
+export enum StaticScope {
+  module = 1,
+  method = 2,
+}
+
+export enum DecoratorScope {
   method = 1,
   controller = 2,
 }

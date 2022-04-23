@@ -1,11 +1,18 @@
+import path, { join } from "path";
 import {
   ManagedRoute,
   ManagedController,
   ManagedQueries,
   ManagedModule,
   ManagedCors,
-  CorsScope,
+  DecoratorScope,
+  ManagedStatic,
+  StaticScope,
+  HttpMethod,
+  RouteType,
 } from "./types";
+
+export const __GLOBAL__ = "__GLOBAL__";
 
 class RouteManager {
   private _managedRoutes = new Map<string, ManagedRoute>();
@@ -34,7 +41,6 @@ class RouteManager {
   }
   public registerController(controller: ManagedController) {
     this._jobQueue.push(() => {
-      console.log('registerController')
       if (this.dependencyInjected(controller.controller)) {
         this._managedControllers.set(controller.controller, controller);
       }
@@ -60,25 +66,58 @@ class RouteManager {
   }
   public registerCorsPolicy(cors: ManagedCors) {
     const key =
-      cors.scope === CorsScope.method
+      cors.scope === DecoratorScope.method
         ? `${cors.controller}-${cors.methodName}`
         : cors.controller;
     this._jobQueue.push(() => {
-      console.log('registerCorsPolicy')
       if (this._managedControllers.has(cors.controller)) {
         this._managedCorses.set(key, cors);
       }
     });
   }
-
+  public registerStatic(staticOption: ManagedStatic) {
+    // scope有三种：module、method
+    // module表示静态文件夹，全局可访问
+    // method表示静态资源，方法级别的
+    const key =
+      staticOption.scope === StaticScope.method
+        ? `${staticOption.controller}-${staticOption.methodName}`
+        : __GLOBAL__;
+    this._jobQueue.push(() => {
+      if (
+        staticOption.scope === StaticScope.method &&
+        this._managedControllers.has(staticOption.controller)
+      ) {
+        this._managedRoutes.set(key, {
+          path: staticOption.path,
+          staticFilePath: staticOption.staticFilePath,
+          method: HttpMethod.Get,
+          callee: staticOption.callee,
+          constructor: staticOption.constructor,
+          controller: staticOption.controller,
+          routeType: RouteType.static,
+          encoding: staticOption.encoding,
+        });
+      } else {
+        this._managedRoutes.set(key, {
+          path: `${staticOption.path}${staticOption.path.endsWith("/") ? ":filename" : "/:filename"}`,
+          method: HttpMethod.Get,
+          callee: staticOption.callee,
+          constructor: staticOption.constructor,
+          controller: staticOption.controller,
+          routeType: RouteType.static,
+          encoding: staticOption.encoding,
+          staticFilePath: staticOption.staticFilePath
+        });
+      }
+    });
+  }
   public getControllerCorsPolicy(controller: string) {
     return this._managedCorses.get(controller);
   }
-
   public getMethodCorsPolicy(controller: string, methodName: string) {
     return this._managedCorses.get(`${controller}-${methodName}`);
   }
-
   public getManageModule(moduleName: string) {
     this._managedModules.get(moduleName);
   }

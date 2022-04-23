@@ -6,6 +6,7 @@ import {
   Body,
   Params,
   Cors,
+  Static,
 } from "../core/decorators";
 
 @Controller("user")
@@ -14,7 +15,7 @@ import {
   origin: "http://127.0.0.1:5500",
 })
 export default class UserControler {
-
+ 
   @Get("/user/:id")
   public async getUser(
     @Query("age") age: number,
@@ -29,4 +30,7 @@ export default class UserControler {
       id,
     };
   }
+
+  // @Static("/static/1.txt")
+  public async getText() {}
 }
