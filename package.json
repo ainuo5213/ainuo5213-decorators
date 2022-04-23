@@ -1,0 +1,13 @@
+{
+  "scripts": {
+    "start": "ts-node ./src/index.ts"
+  },
+  "dependencies": {
+    "@types/koa": "^2.13.4",
+    "@types/koa-router": "^7.4.4",
+    "koa": "^2.13.4",
+    "koa-router": "^10.1.1",
+    "ts-node": "^10.7.0",
+    "typescript": "^4.6.3"
+  }
+}
