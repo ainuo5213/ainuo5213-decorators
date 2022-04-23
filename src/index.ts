@@ -1,16 +1,32 @@
 import Koa from "koa";
 import Router from "./route-manager/Router";
-import { Get, Prefix, Params } from "./route-manager/decorators/index";
+import bodyParser from "koa-bodyparser";
+import {
+  Get,
+  Prefix,
+  Query,
+  Header,
+  Body,
+  Params,
+} from "./route-manager/decorators/index";
 const koa = new Koa();
 const router = new Router();
+koa.use(bodyParser());
 
-@Prefix("user")
 class UserControler {
-  @Get("/user")
-  public async getUser(@Params("age") age: number) {
+  @Get("/user/:id")
+  public async getUser(
+    @Query("age") age: number,
+    @Header("uId") uId: string,
+    @Body("user") user: { name: string; age: number },
+    @Params("id") id: number
+  ) {
     return {
-      age
-    }
+      age,
+      uId,
+      user,
+      id
+    };
   }
 }
 

@@ -29,11 +29,11 @@ class RouteManager {
     }
     arraylist.push(query);
   }
-  public getManagedQuery(controller: string, callMethodName: string) {
+  public getManagedParam(controller: string, callMethodName: string) {
     const key = `${controller}-${callMethodName.toLowerCase()}`;
     return manager._managedQueries.get(key);
   }
-  public getManagedPrefix(controller) {
+  public getManagedPrefix(controller: string) {
     return manager._managedPrefixs.get(controller);
   }
   public getManagedPrefixs() {

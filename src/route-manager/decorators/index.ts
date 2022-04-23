@@ -1,5 +1,5 @@
 import manager from "../index";
-import { ManagedRoute, HttpMethod } from "../types";
+import { ManagedRoute, HttpMethod, ParamFromTypes } from "../types";
 function createManageRoute(
   path: string,
   target: any,
@@ -83,12 +83,62 @@ export function Prefix(prefix?: string) {
   };
 }
 
+function createManagedParam(
+  target: Object,
+  methodName: string,
+  paramName: string,
+  index: number,
+  paramFrom: ParamFromTypes
+) {
+  return {
+    controller: target.constructor.name,
+    methodName: methodName,
+    parseName: paramName,
+    paramIndex: index,
+    paramFrom: paramFrom,
+  };
+}
+
+export function Query(param?: string) {
+  return (target: Object, methodName: string, index: number) => {
+    manager.registerParam(
+      createManagedParam(target, methodName, param, index, ParamFromTypes.Query)
+    );
+  };
+}
+
+export function Header(param?: string) {
+  return (target: Object, methodName: string, index: number) => {
+    manager.registerParam(
+      createManagedParam(
+        target,
+        methodName,
+        param.toLowerCase(),
+        index,
+        ParamFromTypes.Header
+      )
+    );
+  };
+}
+
+export function Body(param?: string) {
+  return (target: Object, methodName: string, index: number) => {
+    manager.registerParam(
+      createManagedParam(target, methodName, param, index, ParamFromTypes.Body)
+    );
+  };
+}
+
 export function Params(param?: string) {
-  return (target: Object, methodName: string, descriptor) => {
-    manager.registerParam({
-      controller: target.constructor.name,
-      methodName: methodName,
-      parseName: param,
-    });
+  return (target: Object, methodName: string, index: number) => {
+    manager.registerParam(
+      createManagedParam(
+        target,
+        methodName,
+        param,
+        index,
+        ParamFromTypes.Params
+      )
+    );
   };
 }

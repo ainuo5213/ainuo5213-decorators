@@ -15,8 +15,9 @@ export interface ManagedQueries {
   controller: string;
   methodName: string;
   parseName: string;
+  paramIndex: number;
+  paramFrom: ParamFromTypes;
 }
-
 
 export enum HttpMethod {
   Get = "get",
@@ -26,4 +27,11 @@ export enum HttpMethod {
   Put = "Put",
   Patch = "Patch",
   Head = "Head",
+}
+
+export enum ParamFromTypes {
+  Header = 0,
+  Query = 1,
+  Params = 2,
+  Body = 3
 }

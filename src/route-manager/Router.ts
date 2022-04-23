@@ -1,4 +1,4 @@
-import { ManagedRoute } from "./types";
+import { ManagedRoute, ParamFromTypes } from "./types";
 import KoaRouter from "koa-router";
 import manager from "./index";
 import Application from "koa";
@@ -23,16 +23,33 @@ export default class Router extends KoaRouter {
             any
           >
         ) => {
-          const managedParams = manager.getManagedQuery(
+          const managedParams = manager.getManagedParam(
             route.constructor.name,
             route.callee.name
           );
           let args = [];
           managedParams.forEach((managedParam) => {
-            args.push(ctx.query[managedParam.parseName]);
+            let paramIndex = managedParam.paramIndex;
+            switch (managedParam.paramFrom) {
+              case ParamFromTypes.Body:
+                args[paramIndex] = ctx.request.body[managedParam.parseName];
+                break;
+
+              case ParamFromTypes.Header:
+                args[paramIndex] = ctx.headers[managedParam.parseName];
+                break;
+
+              case ParamFromTypes.Params:
+                args[paramIndex] = ctx.params[managedParam.parseName];
+                break;
+
+              case ParamFromTypes.Query:
+                args[paramIndex] = ctx.query[managedParam.parseName];
+                break;
+            }
           });
 
-          const result = route.callee(...args, ctx);
+          const result = route.callee(...args);
           ctx.body = await Promise.resolve(result);
         }
       );
