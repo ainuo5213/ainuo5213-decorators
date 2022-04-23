@@ -5,7 +5,7 @@ import {
   Header,
   Body,
   Params,
-} from "../route-manager/decorators";
+} from "../core/decorators";
 @Controller("city")
 export default class CityController {
   @Get("/user/:id")

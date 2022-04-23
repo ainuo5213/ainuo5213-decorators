@@ -1,14 +1,31 @@
 import { ManagedRoute, ParamFromTypes } from "./types";
+import Koa from "koa";
+import bodyParser from "koa-bodyparser";
 import KoaRouter from "koa-router";
 import manager from "./manager";
 import Application from "koa";
 
-export default class Router extends KoaRouter {
-  public registerRoute() {
+type Constructor<T> = new (...args: any[]) => T;
+const CorsPolicies = {
+  method: "Access-Control-Allow-Methods",
+  headers: "Access-Control-Allow-Headers",
+  origin: "Access-Control-Allow-Origin",
+  credentials: "Access-Control-Allow-Credentials",
+  maxage: "Access-Control-Max-Age",
+};
+
+export default class AppFactory {
+  public static create<T>(Module: Constructor<T>) {
+    let module = new Module() as any;
+    const koa = new Koa();
+    const router = new KoaRouter();
+    Object.setPrototypeOf(module, koa);
+    koa.use(bodyParser());
+    koa.use(router.routes());
+    koa.use(router.allowedMethods());
     manager.flushJob();
     const routes = manager.getManagedRoutes();
     routes.forEach((route: ManagedRoute) => {
-      manager.flushJob();
       const prefix = manager.getManagedController(route.controller);
       let requestPath = route.path;
       if (prefix) {
@@ -16,7 +33,7 @@ export default class Router extends KoaRouter {
           requestPath.startsWith("/") ? requestPath : `/${requestPath}`
         }`;
       }
-      this[route.method](
+      router[route.method](
         requestPath,
         async (
           ctx: Application.ParameterizedContext<
@@ -52,9 +69,30 @@ export default class Router extends KoaRouter {
           });
 
           const result = route.callee(...args);
+          // cors policy
+          const controllerPolicy = manager.getControllerCorsPolicy(
+            route.controller
+          );
+          const methodPolicy = manager.getMethodCorsPolicy(
+            route.controller,
+            route.callee.name
+          );
+          if (methodPolicy) {
+            Object.keys(methodPolicy.policy).forEach((key) => {
+              const corsKey = CorsPolicies[key];
+              ctx.res.setHeader(corsKey, methodPolicy.policy[key]);
+            });
+          } else if (controllerPolicy) {
+            Object.keys(controllerPolicy.policy).forEach((key) => {
+              const corsKey = CorsPolicies[key];
+              ctx.res.setHeader(corsKey, controllerPolicy.policy[key]);
+            });
+          }
+
           ctx.body = await Promise.resolve(result);
         }
       );
     });
+    return module as Koa;
   }
 }

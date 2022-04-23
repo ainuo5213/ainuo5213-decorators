@@ -5,9 +5,16 @@ import {
   Header,
   Body,
   Params,
-} from "../route-manager/decorators";
+  Cors,
+} from "../core/decorators";
+
 @Controller("user")
+@Cors({
+  method: "*",
+  origin: "http://127.0.0.1:5500",
+})
 export default class UserControler {
+
   @Get("/user/:id")
   public async getUser(
     @Query("age") age: number,

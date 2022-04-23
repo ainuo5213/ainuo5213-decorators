@@ -1,6 +1,5 @@
-import { Module } from "../route-manager/decorators";
+import { Module } from "../core/decorators";
 import UserControler from "./UserController";
-import "./CityController";
 
 @Module({
   controllers: [UserControler],

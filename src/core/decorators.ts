@@ -4,6 +4,8 @@ import {
   HttpMethod,
   ParamFromTypes,
   ModuleOptions,
+  CorsOptions,
+  CorsScope,
 } from "./types";
 function createManageRoute(
   path: string,
@@ -76,12 +78,35 @@ export function Delete(path?: string) {
   };
 }
 
+export function Cors(
+  options: CorsOptions = {
+    origin: "*",
+    method: "*",
+    headers: "*",
+    credentials: false,
+    maxage: 3600,
+  }
+) {
+  return (target: Object | Function, methodName?: string) => {
+    const scope =
+      typeof target === "function" ? CorsScope.controller : CorsScope.method;
+    manager.registerCorsPolicy({
+      policy: options,
+      methodName: scope === CorsScope.method ? methodName : "",
+      controller:
+        scope === CorsScope.method
+          ? (target as Object).constructor.name
+          : (target as Function).name,
+      scope,
+    });
+  };
+}
+
 export function Controller(prefix?: string) {
   if (prefix.startsWith("/")) {
     throw new Error("前缀不能以/开头");
   }
   return (target: Function) => {
-    
     manager.registerController({
       prefix: prefix || "",
       constructor: target,

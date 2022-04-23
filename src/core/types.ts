@@ -25,6 +25,26 @@ export interface ManagedQueries {
   paramFrom: ParamFromTypes;
 }
 
+export interface CorsOptions {
+  method?: string;
+  headers?: string;
+  origin?: string;
+  credentials?: boolean;
+  maxage?: number;
+}
+
+export interface ManagedCors {
+  policy?: CorsOptions;
+  controller: string;
+  methodName: string;
+  scope: CorsScope;
+}
+
+export enum CorsScope {
+  method = 1,
+  controller = 2,
+}
+
 export enum HttpMethod {
   Get = "get",
   Post = "post",

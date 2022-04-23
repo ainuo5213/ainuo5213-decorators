@@ -3,13 +3,16 @@ import {
   ManagedController,
   ManagedQueries,
   ManagedModule,
+  ManagedCors,
+  CorsScope,
 } from "./types";
 
 class RouteManager {
   private _managedRoutes = new Map<string, ManagedRoute>();
-  private _ManagedControllers = new Map<string, ManagedController>();
+  private _managedControllers = new Map<string, ManagedController>();
   private _managedQueries = new Map<string, Array<ManagedQueries>>();
-  private _ManagedModules = new Map<string, ManagedModule>();
+  private _managedModules = new Map<string, ManagedModule>();
+  private _managedCorses = new Map<string, ManagedCors>();
   private static _instance: RouteManager;
   private _jobQueue: Array<() => void> = [];
   private constructor() {}
@@ -24,21 +27,22 @@ class RouteManager {
   public registerRoute(route: ManagedRoute) {
     const key = `${route.path}-${route.method.toLowerCase()}`;
     this._jobQueue.push(() => {
-      if (this._ManagedControllers.has(route.controller)) {
+      if (this._managedControllers.has(route.controller)) {
         this._managedRoutes.set(key, route);
       }
     });
   }
   public registerController(controller: ManagedController) {
     this._jobQueue.push(() => {
+      console.log('registerController')
       if (this.dependencyInjected(controller.controller)) {
-        this._ManagedControllers.set(controller.controller, controller);
+        this._managedControllers.set(controller.controller, controller);
       }
     });
   }
   public registerModule(module: ManagedModule) {
-    if (!this._ManagedModules.has(module.moduleName)) {
-      this._ManagedModules.set(module.moduleName, module);
+    if (!this._managedModules.has(module.moduleName)) {
+      this._managedModules.set(module.moduleName, module);
     }
   }
   public registerParam(query: ManagedQueries) {
@@ -49,23 +53,44 @@ class RouteManager {
       this._managedQueries.set(key, arraylist);
     }
     this._jobQueue.push(() => {
-      if (this._ManagedControllers.has(query.controller)) {
+      if (this._managedControllers.has(query.controller)) {
         arraylist.push(query);
       }
     });
   }
+  public registerCorsPolicy(cors: ManagedCors) {
+    const key =
+      cors.scope === CorsScope.method
+        ? `${cors.controller}-${cors.methodName}`
+        : cors.controller;
+    this._jobQueue.push(() => {
+      console.log('registerCorsPolicy')
+      if (this._managedControllers.has(cors.controller)) {
+        this._managedCorses.set(key, cors);
+      }
+    });
+  }
+
+  public getControllerCorsPolicy(controller: string) {
+    return this._managedCorses.get(controller);
+  }
+
+  public getMethodCorsPolicy(controller: string, methodName: string) {
+    return this._managedCorses.get(`${controller}-${methodName}`);
+  }
+
   public getManageModule(moduleName: string) {
-    this._ManagedModules.get(moduleName);
+    this._managedModules.get(moduleName);
   }
   public getManagedParam(controller: string, callMethodName: string) {
     const key = `${controller}-${callMethodName.toLowerCase()}`;
     return manager._managedQueries.get(key);
   }
   public getManagedController(controller: string) {
-    return this._ManagedControllers.get(controller);
+    return this._managedControllers.get(controller);
   }
   public getManagedControllers() {
-    return this._ManagedControllers;
+    return this._managedControllers;
   }
   public getManagedRoutes() {
     return this._managedRoutes;
@@ -81,7 +106,7 @@ class RouteManager {
   }
   private dependencyInjected(controller: string) {
     let has = false;
-    this._ManagedModules.forEach(({ controllers }) => {
+    this._managedModules.forEach(({ controllers }) => {
       if (controllers.findIndex((r) => r.name === controller) > -1) {
         has = true;
         return;
