@@ -27,7 +27,6 @@ export default class AppFactory {
     koa.use(router.allowedMethods());
     manager.flushJob();
     const routes = manager.getManagedRoutes();
-    console.log(routes);
     routes.forEach((route: ManagedRoute) => {
       const prefix = manager.getManagedController(route.controller);
       let requestPath = route.path;
@@ -49,6 +48,7 @@ export default class AppFactory {
             route.controller,
             route.callee.name
           );
+          const instance = new (route.constructor as Constructor<T>)();
           let args = [];
           if (managedParams) {
             managedParams.forEach((managedParam) => {
@@ -73,7 +73,7 @@ export default class AppFactory {
             });
           }
 
-          const result = route.callee(...args);
+          
           // cors policy
           const controllerPolicy = manager.getControllerCorsPolicy(
             route.controller
@@ -115,6 +115,7 @@ export default class AppFactory {
             }
             ctx.body = fileContent;
           } else {
+            const result = instance[route.callee.name](...args);
             ctx.body = await Promise.resolve(result);
           }
         }
