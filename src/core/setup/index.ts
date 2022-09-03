@@ -83,7 +83,6 @@ export default class Server<T extends Function> {
       requestHandler: info.requestHandler,
       requestMethod: info.requestMethod
     } as CollectedValueType
-    console.log(parameters[0], parameters[1])
     for (let i = 0; i < parameters.length; i++) {
       const parameter = parameters[i]
 

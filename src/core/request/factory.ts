@@ -86,7 +86,6 @@ export const routerFactory = <T extends Function>(
       )
     } as ICollected
   })
-  console.log(collected[0], collected[1])
 
   return collected
 }
