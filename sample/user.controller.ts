@@ -21,9 +21,13 @@ export class UserController {
     //   fileContent.fileInfo.fileName,
     //   fileContent.fileData
     // )
-    // for (const uploadFile of fileContent) {
-    //   uploadFile.fileData.pipe(createWriteStream(uploadFile.fileInfo.fileName))
-    // }
+    for (const uploadFile of fileContent) {
+      await promises.writeFile(
+        uploadFile.fileInfo.fileName,
+        uploadFile.fileData
+      )
+      // uploadFile.fileData.pipe(createWriteStream(uploadFile.fileInfo.fileName))
+    }
     return {
       success: true,
       code: 10000,

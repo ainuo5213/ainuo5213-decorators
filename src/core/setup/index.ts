@@ -13,7 +13,7 @@ export type ParameterObjectType = {
 }
 
 export type FileInfoData = {
-  fileData: Part
+  fileData: any
   fileName: string
   fieldName: string
 }
@@ -31,7 +31,7 @@ export type FileParameterData = {
     fieldName: string
     fileName: string
   }
-  fileData: Part
+  fileData: any
 }
 
 export type CollectedValueType = Pick<
@@ -223,13 +223,16 @@ export default class Server<T extends Function> {
     let fileInfos: FileInfoData[] = []
     return new Promise((resolve, reject) => {
       form.on('part', (part: Part) => {
-        part.on('data', () => {})
+        const buffer: Buffer[] = []
+        part.on('data', (chunk) => {
+          buffer.push(chunk)
+        })
         part.on('end', () => {
           fileInfos.push({
-            fileData: part,
-            fileName: part.filename,
-            fieldName: part.name
-          } as FileInfoData)
+            fieldName: part.name,
+            fileData: buffer,
+            fileName: part.filename
+          })
         })
       })
       form.on('close', () => {
