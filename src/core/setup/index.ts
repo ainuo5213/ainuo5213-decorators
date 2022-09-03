@@ -4,7 +4,6 @@ import { parse as parseQuery } from 'querystring'
 import { Parameter, ParameterFromType } from '../request/decorator'
 import { moduleFactory, ICollected } from '../request/factory'
 import multiparty, { Part } from 'multiparty'
-import fs from 'fs'
 
 export type ParameterObjectType = {
   parameterValue: any
