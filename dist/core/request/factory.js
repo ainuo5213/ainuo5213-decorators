@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.filesFactory = exports.fileFactory = exports.headerFactory = exports.bodyFactory = exports.queryFactory = exports.paramFactory = exports.parameterFactory = exports.corsPolicyFactory = exports.routerFactory = exports.moduleFactory = void 0;
+exports.moduleFactory = void 0;
 const decorator_1 = require("./decorator");
 const moduleFactory = (moduleClass, corsPolicy = undefined) => {
     const prototype = moduleClass.prototype;
@@ -9,7 +9,7 @@ const moduleFactory = (moduleClass, corsPolicy = undefined) => {
     const collectedData = [];
     if (moduleOption?.controllers?.length) {
         moduleOption.controllers.forEach((r) => {
-            collectedData.push(...(0, exports.routerFactory)(r, moduleCorsPolicy || corsPolicy));
+            collectedData.push(...routerFactory(r, moduleCorsPolicy || corsPolicy));
         });
     }
     if (moduleOption?.modules?.length) {
@@ -40,12 +40,12 @@ const routerFactory = (controllerClass, moduleCorsPolicy = undefined) => {
         const path = Reflect.getMetadata(decorator_1.METADATA_KEY.PATH, requestHandler);
         // 获取方法上请求方法的元数据
         const requestMethod = Reflect.getMetadata(decorator_1.METADATA_KEY.METHOD, requestHandler).replace('ioc:', '').toUpperCase();
-        const queryParameterMetadatas = (0, exports.queryFactory)(controllerClass, requestHandler);
-        const paramParameterMetadatas = (0, exports.paramFactory)(controllerClass, requestHandler);
-        const bodyParameterMetadatas = (0, exports.bodyFactory)(controllerClass, requestHandler);
-        const headerParameterMetadatas = (0, exports.headerFactory)(controllerClass, requestHandler);
-        const fileParameterMetadatas = (0, exports.fileFactory)(controllerClass, requestHandler);
-        const filesParameterMetadatas = (0, exports.filesFactory)(controllerClass, requestHandler);
+        const queryParameterMetadatas = queryFactory(controllerClass, requestHandler);
+        const paramParameterMetadatas = paramFactory(controllerClass, requestHandler);
+        const bodyParameterMetadatas = bodyFactory(controllerClass, requestHandler);
+        const headerParameterMetadatas = headerFactory(controllerClass, requestHandler);
+        const fileParameterMetadatas = fileFactory(controllerClass, requestHandler);
+        const filesParameterMetadatas = filesFactory(controllerClass, requestHandler);
         const methodCorsPolicy = Reflect.getMetadata(decorator_1.METADATA_KEY.Cors, controllerClass.prototype, requestHandler.name);
         return {
             path: `${rootPath}${path}`,
@@ -57,11 +57,6 @@ const routerFactory = (controllerClass, moduleCorsPolicy = undefined) => {
     });
     return collected;
 };
-exports.routerFactory = routerFactory;
-const corsPolicyFactory = (object, handler) => {
-    return Reflect.getMetadata(decorator_1.METADATA_KEY.Cors, object.prototype, handler.name);
-};
-exports.corsPolicyFactory = corsPolicyFactory;
 const parameterFactory = (metadataKey) => {
     return (object, handler) => {
         const objectParameterMetadatas = [];
@@ -74,10 +69,9 @@ const parameterFactory = (metadataKey) => {
         return objectParameterMetadatas;
     };
 };
-exports.parameterFactory = parameterFactory;
-exports.paramFactory = (0, exports.parameterFactory)(decorator_1.METADATA_KEY.PARAM);
-exports.queryFactory = (0, exports.parameterFactory)(decorator_1.METADATA_KEY.QUERY);
-exports.bodyFactory = (0, exports.parameterFactory)(decorator_1.METADATA_KEY.BODY);
-exports.headerFactory = (0, exports.parameterFactory)(decorator_1.METADATA_KEY.HEADER);
-exports.fileFactory = (0, exports.parameterFactory)(decorator_1.METADATA_KEY.File);
-exports.filesFactory = (0, exports.parameterFactory)(decorator_1.METADATA_KEY.Files);
+const paramFactory = parameterFactory(decorator_1.METADATA_KEY.PARAM);
+const queryFactory = parameterFactory(decorator_1.METADATA_KEY.QUERY);
+const bodyFactory = parameterFactory(decorator_1.METADATA_KEY.BODY);
+const headerFactory = parameterFactory(decorator_1.METADATA_KEY.HEADER);
+const fileFactory = parameterFactory(decorator_1.METADATA_KEY.File);
+const filesFactory = parameterFactory(decorator_1.METADATA_KEY.Files);

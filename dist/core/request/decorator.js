@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ModuleCors = exports.ControllerCors = exports.MethodCors = exports.Head = exports.Delete = exports.Patch = exports.Put = exports.Option = exports.Post = exports.Get = exports.Files = exports.File = exports.Header = exports.Body = exports.Query = exports.Param = exports.BodySymbolId = exports.Module = exports.Controller = exports.METADATA_KEY = void 0;
+exports.ModuleCors = exports.ControllerCors = exports.MethodCors = exports.Head = exports.Delete = exports.Patch = exports.Put = exports.Option = exports.Post = exports.Get = exports.Files = exports.File = exports.Header = exports.Body = exports.Query = exports.Param = exports.Module = exports.Controller = exports.METADATA_KEY = void 0;
 require("reflect-metadata");
 var METADATA_KEY;
 (function (METADATA_KEY) {
@@ -50,7 +50,7 @@ const parameterMoreDecoratorFactory = (metadataKey) => {
 };
 const parameterWithoutDecoratorFactory = (metadataKey) => {
     const paramFrom = metadataKey.slice('ioc:'.length);
-    return () => addParameter(metadataKey, paramFrom, exports.BodySymbolId);
+    return () => addParameter(metadataKey, paramFrom, BodySymbolId);
 };
 const Controller = (path) => {
     return (target) => {
@@ -64,7 +64,7 @@ const Module = (option) => {
     };
 };
 exports.Module = Module;
-exports.BodySymbolId = Symbol('body');
+const BodySymbolId = Symbol('body');
 // 参数装饰器
 exports.Param = parameterMoreDecoratorFactory(METADATA_KEY.PARAM);
 exports.Query = parameterMoreDecoratorFactory(METADATA_KEY.QUERY);

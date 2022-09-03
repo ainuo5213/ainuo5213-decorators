@@ -21,7 +21,6 @@ export declare type ModuleOption = Partial<{
     modules: Function[];
 }>;
 export declare const Module: (option: ModuleOption) => ClassDecorator;
-export declare const BodySymbolId: unique symbol;
 export declare type ParameterFromType = 'query' | 'param' | 'body' | 'header' | 'file' | 'files';
 export declare type Parameter = {
     index: number;
@@ -51,4 +50,3 @@ export declare const MethodCors: (policy?: CorsPolicy | undefined) => MethodDeco
 export declare const ControllerCors: (policy?: CorsPolicy | undefined) => ClassDecorator;
 export declare const ModuleCors: (policy?: CorsPolicy | undefined) => ClassDecorator;
 export {};
-//# sourceMappingURL=decorator.d.ts.map

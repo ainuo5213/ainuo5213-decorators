@@ -39,7 +39,7 @@ export type CollectedValueType = Pick<
 >
 
 export default class Server<T extends Function> {
-  collected: ICollected[] = []
+  private collected: ICollected[] = []
   private static instance: Server<Function>
   private constructor(module: T) {
     this.collected = moduleFactory(module)

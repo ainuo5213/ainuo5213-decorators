@@ -95,7 +95,7 @@ export const Module = (option: ModuleOption): ClassDecorator => {
   }
 }
 
-export const BodySymbolId = Symbol('body')
+const BodySymbolId = Symbol('body')
 export type ParameterFromType =
   | 'query'
   | 'param'

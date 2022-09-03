@@ -25,7 +25,7 @@ export declare type FileParameterData = {
 };
 export declare type CollectedValueType = Pick<ICollected, 'path' | 'requestHandler' | 'requestMethod'>;
 export default class Server<T extends Function> {
-    collected: ICollected[];
+    private collected;
     private static instance;
     private constructor();
     static create(module: Function): Server<Function>;
@@ -40,4 +40,3 @@ export default class Server<T extends Function> {
     private handleParameterFromQuery;
     private handleParameterFromParam;
 }
-//# sourceMappingURL=index.d.ts.map

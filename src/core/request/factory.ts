@@ -55,7 +55,7 @@ export const moduleFactory = <T extends Function>(
   return collectedData
 }
 
-export const routerFactory = <T extends Function>(
+const routerFactory = <T extends Function>(
   controllerClass: T,
   moduleCorsPolicy: CorsPolicy | undefined = undefined
 ): ICollected[] => {
@@ -131,15 +131,7 @@ export const routerFactory = <T extends Function>(
   return collected
 }
 
-export const corsPolicyFactory = (object: Function, handler: AsyncFunc) => {
-  return Reflect.getMetadata(
-    METADATA_KEY.Cors,
-    object.prototype,
-    handler.name
-  ) as CorsPolicy
-}
-
-export const parameterFactory = (metadataKey: METADATA_KEY) => {
+const parameterFactory = (metadataKey: METADATA_KEY) => {
   return (object: Function, handler: AsyncFunc) => {
     const objectParameterMetadatas: Parameter[] = []
     for (let i = 0; i < handler.length; i++) {
@@ -156,9 +148,9 @@ export const parameterFactory = (metadataKey: METADATA_KEY) => {
   }
 }
 
-export const paramFactory = parameterFactory(METADATA_KEY.PARAM)
-export const queryFactory = parameterFactory(METADATA_KEY.QUERY)
-export const bodyFactory = parameterFactory(METADATA_KEY.BODY)
-export const headerFactory = parameterFactory(METADATA_KEY.HEADER)
-export const fileFactory = parameterFactory(METADATA_KEY.File)
-export const filesFactory = parameterFactory(METADATA_KEY.Files)
+const paramFactory = parameterFactory(METADATA_KEY.PARAM)
+const queryFactory = parameterFactory(METADATA_KEY.QUERY)
+const bodyFactory = parameterFactory(METADATA_KEY.BODY)
+const headerFactory = parameterFactory(METADATA_KEY.HEADER)
+const fileFactory = parameterFactory(METADATA_KEY.File)
+const filesFactory = parameterFactory(METADATA_KEY.Files)
