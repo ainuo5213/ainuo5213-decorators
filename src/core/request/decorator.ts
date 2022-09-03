@@ -17,7 +17,10 @@ export enum METADATA_KEY {
   MODULE = 'ioc:module',
   PARAM = 'ioc:param',
   QUERY = 'ioc:query',
-  BODY = 'ioc:body'
+  BODY = 'ioc:body',
+  HEADER = 'ioc:header',
+  File = 'ioc:file',
+  Files = 'ioc:files'
 }
 
 enum REQUEST_METHOD {
@@ -40,26 +43,37 @@ const methodDecoratorFactory = (method: REQUEST_METHOD) => {
 }
 
 type ParameterType = string | symbol
-const parameterDecoratorFactory = (
+
+function addParameter(
   metadataKey: METADATA_KEY,
   paramFrom: ParameterFromType,
-  injectParameterKey?: ParameterType
-) => {
-  return (parameterName: string): ParameterDecorator => {
-    return (target, propKey, paramIndex) => {
-      const parameter: Parameter = {
-        index: paramIndex,
-        injectParameterKey: injectParameterKey || parameterName,
-        paramFrom: paramFrom
-      }
-      Reflect.defineMetadata(
-        metadataKey,
-        parameter,
-        target,
-        `${propKey as string}.${paramIndex}`
-      )
+  parameterName: ParameterType
+): ParameterDecorator {
+  return (target, propKey, paramIndex) => {
+    const parameter: Parameter = {
+      index: paramIndex,
+      injectParameterKey: parameterName,
+      paramFrom: paramFrom
     }
+
+    Reflect.defineMetadata(
+      metadataKey,
+      parameter,
+      target,
+      `${propKey as string}.${paramIndex}`
+    )
   }
+}
+
+const parameterDecoratorFactory = (metadataKey: METADATA_KEY) => {
+  const paramFrom = metadataKey.slice('ioc:'.length) as ParameterFromType
+  return (parameterName: ParameterType): ParameterDecorator =>
+    addParameter(metadataKey, paramFrom, parameterName)
+}
+
+const bodyDecoratorFactory = (metadataKey: METADATA_KEY) => {
+  return (): ParameterDecorator =>
+    addParameter(metadataKey, 'body', BodySymbolId)
 }
 
 export const Controller = (path?: string): ClassDecorator => {
@@ -80,18 +94,20 @@ export const Module = (option: ModuleOption): ClassDecorator => {
 }
 
 export const BodySymbolId = Symbol('body')
-export type ParameterFromType = 'query' | 'param' | symbol
+export type ParameterFromType = 'query' | 'param' | 'body' | 'header'
 export type Parameter = {
   index: number
   injectParameterKey: string | symbol
   paramFrom: ParameterFromType
 }
 
-export const Param = parameterDecoratorFactory(METADATA_KEY.PARAM, 'param')
-export const Query = parameterDecoratorFactory(METADATA_KEY.QUERY, 'query')
-export const Body = parameterDecoratorFactory(METADATA_KEY.BODY, BodySymbolId)
+// 参数装饰器
+export const Param = parameterDecoratorFactory(METADATA_KEY.PARAM)
+export const Query = parameterDecoratorFactory(METADATA_KEY.QUERY)
+export const Body = bodyDecoratorFactory(METADATA_KEY.BODY)
+export const Header = parameterDecoratorFactory(METADATA_KEY.HEADER)
 
-// 定义http装饰器
+// 方法装饰器
 export const Get = methodDecoratorFactory(REQUEST_METHOD.GET)
 export const Post = methodDecoratorFactory(REQUEST_METHOD.POST)
 export const Option = methodDecoratorFactory(REQUEST_METHOD.OPTION)

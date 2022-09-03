@@ -77,12 +77,19 @@ export const routerFactory = <T extends Function>(
       controllerClass,
       requestHandler
     )
+    const bodyParameterMetadatas = bodyFactory(controllerClass, requestHandler)
+    const headerParameterMetadatas = headerFactory(
+      controllerClass,
+      requestHandler
+    )
     return {
       path: `${rootPath}${path}`,
       requestMethod,
       requestHandler,
       requestHandlerParameters: queryParameterMetadatas.concat(
-        paramParameterMetadatas
+        paramParameterMetadatas,
+        bodyParameterMetadatas,
+        headerParameterMetadatas
       )
     } as ICollected
   })
@@ -109,3 +116,5 @@ export const parameterFactory = (metadataKey: METADATA_KEY) => {
 
 export const paramFactory = parameterFactory(METADATA_KEY.PARAM)
 export const queryFactory = parameterFactory(METADATA_KEY.QUERY)
+export const bodyFactory = parameterFactory(METADATA_KEY.BODY)
+export const headerFactory = parameterFactory(METADATA_KEY.HEADER)

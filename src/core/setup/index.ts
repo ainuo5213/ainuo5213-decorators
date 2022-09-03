@@ -21,20 +21,21 @@ export default class Server<T extends Function> {
   }
   async listen(port: number) {
     http
-      .createServer((req, res) => {
+      .createServer(async (req, res) => {
         let matched = false
         const { pathname } = parseUrl(req.url!)
+
         for (const info of this.collected) {
           // param类型的路由，需要进入内部解析才能得到是否匹配
           if (info.path!.includes('/:')) {
-            matched = this.handleRequest(req, res, info)
+            matched = await this.handleRequest(req, res, info)
           }
           // 非param类型的鲁豫
           else if (
             pathname === info.path &&
             req.method!.toLowerCase() === info.requestMethod.toLowerCase()
           ) {
-            matched = this.handleRequest(req, res, info)
+            matched = await this.handleRequest(req, res, info)
           } else {
             matched = false
           }
@@ -49,13 +50,13 @@ export default class Server<T extends Function> {
       .listen(port)
   }
 
-  handleRequest(
+  async handleRequest(
     req: http.IncomingMessage,
     res: http.ServerResponse,
     info: ICollected
-  ): boolean {
+  ): Promise<boolean> {
     // 处理参数
-    const { parameters, matched } = this.handleParameter(req, info)
+    const { parameters, matched } = await this.handleParameter(req, info)
 
     if (matched) {
       info
@@ -68,46 +69,51 @@ export default class Server<T extends Function> {
     return matched
   }
 
-  handleParameter(
+  async handleParameter(
     req: http.IncomingMessage,
     info: ICollected
-  ): {
+  ): Promise<{
     parameters: ParameterObjectType[]
     matched: boolean
-  } {
+  }> {
     const resultParameters: ParameterObjectType[] = []
     const parameters = info.requestHandlerParameters
-    let matched = false
+    let matched = true
     const infoValue = {
       path: info.path,
       requestHandler: info.requestHandler,
       requestMethod: info.requestMethod
     } as CollectedValueType
+
     for (let i = 0; i < parameters.length; i++) {
       const parameter = parameters[i]
-
-      if (parameter.paramFrom === BodySymbolId) {
-      } else if (parameter.paramFrom === 'query') {
-        // 是否匹配
-        matched = true
-
-        // 解析query参数
-        const queryParameterObect = this.handleParameterFromQuery(
+      if (parameter.paramFrom === 'body') {
+        const bodyParameterObject = await this.handleParameterFromBody(
           req,
           parameter,
           infoValue
         )
-        if (queryParameterObect) {
-          resultParameters.push(queryParameterObect)
+        if (bodyParameterObject) {
+          resultParameters.push(bodyParameterObject)
+        }
+      } else if (parameter.paramFrom === 'query') {
+        // 解析query参数
+        const queryParameterObject = this.handleParameterFromQuery(
+          req,
+          parameter,
+          infoValue
+        )
+        if (queryParameterObject) {
+          resultParameters.push(queryParameterObject)
         }
       } else if (parameter.paramFrom === 'param') {
-        const paramParameterObect = this.handleParameterFromParam(
+        const paramParameterObject = this.handleParameterFromParam(
           req,
           parameter,
           infoValue
         )
         // 如果返回的是boolean，则说明没有匹配到
-        matched = typeof paramParameterObect !== 'boolean'
+        matched = typeof paramParameterObject !== 'boolean'
 
         if (!matched) {
           return {
@@ -115,8 +121,17 @@ export default class Server<T extends Function> {
             parameters: []
           }
         }
-        if (paramParameterObect) {
-          resultParameters.push(paramParameterObect as ParameterObjectType)
+        if (paramParameterObject) {
+          resultParameters.push(paramParameterObject as ParameterObjectType)
+        }
+      } else if (parameter.paramFrom === 'header') {
+        const headerParameterObject = this.handleParameterFromHeader(
+          req,
+          parameter,
+          infoValue
+        )
+        if (headerParameterObject) {
+          resultParameters.push(headerParameterObject)
         }
       }
     }
@@ -127,6 +142,46 @@ export default class Server<T extends Function> {
       matched: matched,
       parameters: resultParameters
     }
+  }
+
+  handleParameterFromHeader(
+    req: http.IncomingMessage,
+    parameter: Parameter,
+    infoValue: CollectedValueType
+  ): ParameterObjectType {
+    const value =
+      req.headers[(parameter.injectParameterKey as string).toLowerCase()]
+    return {
+      parameterIndex: parameter.index,
+      parameterValue: value
+    }
+  }
+
+  handleParameterFromBody(
+    req: http.IncomingMessage,
+    parameter: Parameter,
+    infoValue: CollectedValueType
+  ): Promise<ParameterObjectType> {
+    return new Promise((resolve, reject) => {
+      let postBodyString = ''
+      // 每次req都是个新的请求，所以不用解绑，由v8引擎自己维护
+      const onChunk = (chunk: any) => {
+        postBodyString += chunk
+      }
+      const onEnd = () => {
+        const parmasObject = JSON.parse(postBodyString)
+        resolve({
+          parameterIndex: parameter.index,
+          parameterValue: parmasObject
+        })
+      }
+      const onError = (err: Error) => {
+        reject(err)
+      }
+      req.on('data', onChunk)
+      req.on('end', onEnd)
+      req.on('error', onError)
+    })
   }
 
   handleParameterFromQuery(

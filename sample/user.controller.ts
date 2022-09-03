@@ -1,6 +1,8 @@
 import {
+  Body,
   Controller,
   Get,
+  Header,
   Param,
   Post,
   Query
@@ -8,29 +10,23 @@ import {
 
 @Controller('/user')
 export class UserController {
-  @Get('/list/:id')
-  async userList(@Param('id') id: number, @Query('name') name: string) {
-    return {
-      success: true,
-      code: 10000,
-      data: [
-        {
-          name: name,
-          id: id
-        }
-      ]
-    }
-  }
-
-  @Get('/add')
-  async addUser(@Query('id') id: string, @Query('name') name: string) {
+  @Get('/list')
+  async userList(@Header('Content-Type') contentType: string) {
     return {
       success: true,
       code: 10000,
       data: {
-        name,
-        id
+        contentType
       }
     }
   }
+
+  // @Post('/add')
+  // async addUser(@Body() user: { userName: string; age: number }) {
+  //   return {
+  //     success: true,
+  //     code: 10000,
+  //     data: user
+  //   }
+  // }
 }
