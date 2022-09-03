@@ -1,4 +1,4 @@
-import { Method, METADATA_KEY, ModuleOption } from './decorator'
+import { Method, METADATA_KEY, ModuleOption, Parameter } from './decorator'
 
 type AsyncFunc = (...args: any[]) => Promise<any>
 
@@ -6,6 +6,7 @@ export interface ICollected {
   path: string
   requestMethod: Method
   requestHandler: AsyncFunc
+  requestHandlerParameters: Parameter[]
 }
 
 export const moduleFactory = <T extends Function>(moduleClass: T) => {
@@ -68,13 +69,44 @@ export const routerFactory = <T extends Function>(
         ''
       ) as string
     ).toUpperCase() as Method
-
+    const queryParameterMetadatas = queryFactory(
+      controllerClass,
+      requestHandler
+    )
+    const paramParameterMetadatas = paramFactory(
+      controllerClass,
+      requestHandler
+    )
     return {
       path: `${rootPath}${path}`,
       requestMethod,
-      requestHandler
+      requestHandler,
+      requestHandlerParameters: queryParameterMetadatas.concat(
+        paramParameterMetadatas
+      )
     } as ICollected
   })
+  console.log(collected[0], collected[1])
 
   return collected
 }
+
+export const parameterFactory = (metadataKey: METADATA_KEY) => {
+  return (object: Function, handler: AsyncFunc) => {
+    const objectParameterMetadatas: Parameter[] = []
+    for (let i = 0; i < handler.length; i++) {
+      const metadata = Reflect.getMetadata(
+        metadataKey,
+        object.prototype,
+        `${handler.name}.${i}`
+      ) as Parameter
+      if (metadata) {
+        objectParameterMetadatas.push(metadata)
+      }
+    }
+    return objectParameterMetadatas
+  }
+}
+
+export const paramFactory = parameterFactory(METADATA_KEY.PARAM)
+export const queryFactory = parameterFactory(METADATA_KEY.QUERY)

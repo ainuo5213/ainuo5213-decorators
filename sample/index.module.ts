@@ -3,6 +3,6 @@ import ToyModule from './toy.module'
 import { Module } from '../src/core/request/decorator'
 
 @Module({
-  modules: [UserModule, ToyModule]
+  modules: [UserModule]
 })
 export default class IndexModule {}

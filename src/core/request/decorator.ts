@@ -14,7 +14,10 @@ export enum METADATA_KEY {
   METHOD = 'ioc:method',
   PATH = 'ioc:path',
   MIDDLEWARE = 'ioc:middleware',
-  MODULE = 'ioc:module'
+  MODULE = 'ioc:module',
+  PARAM = 'ioc:param',
+  QUERY = 'ioc:query',
+  BODY = 'ioc:body'
 }
 
 enum REQUEST_METHOD {
@@ -36,6 +39,29 @@ const methodDecoratorFactory = (method: REQUEST_METHOD) => {
   }
 }
 
+type ParameterType = string | symbol
+const parameterDecoratorFactory = (
+  metadataKey: METADATA_KEY,
+  paramFrom: ParameterFromType,
+  injectParameterKey?: ParameterType
+) => {
+  return (parameterName: string): ParameterDecorator => {
+    return (target, propKey, paramIndex) => {
+      const parameter: Parameter = {
+        index: paramIndex,
+        injectParameterKey: injectParameterKey || parameterName,
+        paramFrom: paramFrom
+      }
+      Reflect.defineMetadata(
+        metadataKey,
+        parameter,
+        target,
+        `${propKey as string}.${paramIndex}`
+      )
+    }
+  }
+}
+
 export const Controller = (path?: string): ClassDecorator => {
   return (target) => {
     Reflect.defineMetadata(METADATA_KEY.PATH, path ?? '', target)
@@ -52,6 +78,18 @@ export const Module = (option: ModuleOption): ClassDecorator => {
     Reflect.defineMetadata(METADATA_KEY.MODULE, option, target)
   }
 }
+
+export const BodySymbolId = Symbol('body')
+export type ParameterFromType = 'query' | 'param' | symbol
+export type Parameter = {
+  index: number
+  injectParameterKey: string | symbol
+  paramFrom: ParameterFromType
+}
+
+export const Param = parameterDecoratorFactory(METADATA_KEY.PARAM, 'param')
+export const Query = parameterDecoratorFactory(METADATA_KEY.QUERY, 'query')
+export const Body = parameterDecoratorFactory(METADATA_KEY.BODY, BodySymbolId)
 
 // 定义http装饰器
 export const Get = methodDecoratorFactory(REQUEST_METHOD.GET)

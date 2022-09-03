@@ -1,30 +1,36 @@
-import { Controller, Get, Post } from '../src/core/request/decorator'
+import {
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query
+} from '../src/core/request/decorator'
 
 @Controller('/user')
 export class UserController {
-  @Get('/list')
-  async userList() {
+  @Get('/list/:id')
+  async userList(@Param('id') id: number, @Query('name') name: string) {
     return {
       success: true,
       code: 10000,
       data: [
         {
-          name: 'ainuo5213',
-          age: 18
-        },
-        {
-          name: '孙永刚',
-          age: 24
+          name: name,
+          id: id
         }
       ]
     }
   }
 
-  @Post('/add')
-  async addUser() {
+  @Get('/add')
+  async addUser(@Query('id') id: string, @Query('name') name: string) {
     return {
       success: true,
-      code: 10000
+      code: 10000,
+      data: {
+        name,
+        id
+      }
     }
   }
 }
