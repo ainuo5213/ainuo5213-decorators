@@ -1,22 +1,27 @@
 import {
   Body,
   Controller,
+  File,
   Get,
   Header,
   Param,
   Post,
   Query
 } from '../src/core/request/decorator'
+import { promises } from 'fs'
+import { FileParameterData } from '../src/core/setup'
 
 @Controller('/user')
 export class UserController {
-  @Get('/list')
-  async userList(@Header('Content-Type') contentType: string) {
+  @Post('/list')
+  async userList(@File('file') fileContent: FileParameterData) {
+    console.log(fileContent.fileInfo)
+    await promises.writeFile('./test.txt', fileContent.fileData)
     return {
       success: true,
       code: 10000,
       data: {
-        contentType
+        ss: '成功'
       }
     }
   }

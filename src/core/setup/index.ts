@@ -1,12 +1,26 @@
 import http from 'http'
 import { parse as parseUrl } from 'url'
 import { parse as parseQuery } from 'querystring'
-import { BodySymbolId, Parameter } from '../request/decorator'
+import { Parameter, ParameterFromType } from '../request/decorator'
 import { moduleFactory, ICollected } from '../request/factory'
 
 export type ParameterObjectType = {
   parameterValue: any
+  paramFrom: ParameterFromType
   parameterIndex: number
+}
+
+export type FileParameterObjectType = ParameterObjectType & {
+  fileInfo: {
+    fileName: string
+  }
+}
+
+export type FileParameterData = {
+  fileInfo: {
+    fileName: string
+  }
+  fileData: any
 }
 
 export type CollectedValueType = Pick<
@@ -60,7 +74,19 @@ export default class Server<T extends Function> {
 
     if (matched) {
       info
-        .requestHandler(...parameters.map((r) => r.parameterValue))
+        .requestHandler(
+          ...parameters.map((r) => {
+            if (r.paramFrom === 'file') {
+              const currentData = r as FileParameterObjectType
+              return {
+                fileInfo: currentData.fileInfo,
+                fileData: currentData.parameterValue
+              } as FileParameterData
+            }
+
+            return r.parameterValue
+          })
+        )
         .then((data) => {
           res.writeHead(200, { 'Content-Type': 'application/json' })
           res.end(JSON.stringify(data))
@@ -133,6 +159,15 @@ export default class Server<T extends Function> {
         if (headerParameterObject) {
           resultParameters.push(headerParameterObject)
         }
+      } else if (parameter.paramFrom === 'file') {
+        const fileParameterObject = await this.handleParameterFromFile(
+          req,
+          parameter,
+          infoValue
+        )
+        if (fileParameterObject) {
+          resultParameters.push(fileParameterObject)
+        }
       }
     }
 
@@ -144,6 +179,83 @@ export default class Server<T extends Function> {
     }
   }
 
+  handleParameterFromFile(
+    req: http.IncomingMessage,
+    parameter: Parameter,
+    infoValue: CollectedValueType
+  ): Promise<ParameterObjectType> {
+    // 从content-type中获取当前文件的分隔符
+    const boundary = `--${
+      req.headers['content-type']!.split('; ')[1].split('=')[1]
+    }`
+
+    function splitBuffer(buffer: Buffer, separator: string) {
+      let result = []
+      let index = 0
+
+      while ((index = buffer.indexOf(separator)) != -1) {
+        result.push(buffer.slice(0, index))
+        buffer = buffer.slice(index + separator.length)
+      }
+      result.push(buffer)
+
+      return result
+    }
+
+    return new Promise((resolve, reject) => {
+      let postBody: Buffer[] = []
+      // 每次req都是个新的请求，所以不用解绑，由v8引擎自己维护
+      const onChunk = (chunk: any) => {
+        postBody.push(chunk)
+      }
+      const onEnd = () => {
+        let buffer = Buffer.concat(postBody)
+        // 分割buffer，取得文件体
+        let result = splitBuffer(buffer, boundary)
+        // 删除头('')和尾的 --\r\n 结束标志的数据
+        result.pop()
+        result.shift()
+        // 将数据体的头和尾的\r\n删掉
+        result = result.map((item) => item.slice(2, item.length - 2))
+        // 开始处理数据，将数据体每一项数据中间的\r\n删掉
+        result.forEach((item) => {
+          let [info, ...data] = splitBuffer(item, '\r\n\r\n')
+
+          // 处理文件信息
+          const fileInfo = info.toString()
+          let infoResult: string[]
+          if (fileInfo.indexOf('\r\n') >= 0) {
+            infoResult = fileInfo.split('\r\n')[0].split('; ')
+          } else {
+            infoResult = fileInfo.split('; ')
+          }
+          let fieldName = infoResult[1].split('=')[1]
+          fieldName = fieldName.substring(1, fieldName.length - 1) // 去除双边的引号
+          let fileName = infoResult[2].split('=')[1]
+          fileName = fileName.substring(1, fileName.length - 1)
+          if (fieldName === parameter.injectParameterKey) {
+            resolve({
+              parameterIndex: parameter.index,
+              parameterValue: data,
+              paramFrom: parameter.paramFrom,
+              fileInfo: {
+                fileName: fileName
+              }
+            } as FileParameterObjectType)
+          } else {
+            reject(new Error('文件名和装饰器定义的文件名不同'))
+          }
+        })
+      }
+      const onError = (err: Error) => {
+        reject(err)
+      }
+      req.on('data', onChunk)
+      req.on('end', onEnd)
+      req.on('error', onError)
+    })
+  }
+
   handleParameterFromHeader(
     req: http.IncomingMessage,
     parameter: Parameter,
@@ -153,7 +265,8 @@ export default class Server<T extends Function> {
       req.headers[(parameter.injectParameterKey as string).toLowerCase()]
     return {
       parameterIndex: parameter.index,
-      parameterValue: value
+      parameterValue: value,
+      paramFrom: parameter.paramFrom
     }
   }
 
@@ -172,7 +285,8 @@ export default class Server<T extends Function> {
         const parmasObject = JSON.parse(postBodyString)
         resolve({
           parameterIndex: parameter.index,
-          parameterValue: parmasObject
+          parameterValue: parmasObject,
+          paramFrom: parameter.paramFrom
         })
       }
       const onError = (err: Error) => {
@@ -235,7 +349,8 @@ export default class Server<T extends Function> {
     const paramValue = pathnameArray[presetPathnameIndex]
     return {
       parameterIndex: parameter.index,
-      parameterValue: paramValue
+      parameterValue: paramValue,
+      paramFrom: parameter.paramFrom
     }
   }
 }

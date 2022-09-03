@@ -94,7 +94,7 @@ export const Module = (option: ModuleOption): ClassDecorator => {
 }
 
 export const BodySymbolId = Symbol('body')
-export type ParameterFromType = 'query' | 'param' | 'body' | 'header'
+export type ParameterFromType = 'query' | 'param' | 'body' | 'header' | 'file'
 export type Parameter = {
   index: number
   injectParameterKey: string | symbol
@@ -106,6 +106,7 @@ export const Param = parameterDecoratorFactory(METADATA_KEY.PARAM)
 export const Query = parameterDecoratorFactory(METADATA_KEY.QUERY)
 export const Body = bodyDecoratorFactory(METADATA_KEY.BODY)
 export const Header = parameterDecoratorFactory(METADATA_KEY.HEADER)
+export const File = parameterDecoratorFactory(METADATA_KEY.File)
 
 // 方法装饰器
 export const Get = methodDecoratorFactory(REQUEST_METHOD.GET)
