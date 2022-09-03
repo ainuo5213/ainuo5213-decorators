@@ -40,10 +40,17 @@ export type CollectedValueType = Pick<
 
 export default class Server<T extends Function> {
   collected: ICollected[] = []
-  constructor(controller: T) {
-    this.collected = moduleFactory(controller)
+  private static instance: Server<Function>
+  private constructor(module: T) {
+    this.collected = moduleFactory(module)
   }
-  async listen(port: number) {
+  public static create(module: Function) {
+    if (!Server.instance) {
+      Server.instance = new Server(module)
+    }
+    return Server.instance
+  }
+  public async listen(port: number) {
     http
       .createServer(async (req, res) => {
         let matched = false
@@ -74,7 +81,7 @@ export default class Server<T extends Function> {
       .listen(port)
   }
 
-  async handleRequest(
+  private async handleRequest(
     req: http.IncomingMessage,
     res: http.ServerResponse,
     info: ICollected
@@ -122,7 +129,7 @@ export default class Server<T extends Function> {
     return matched
   }
 
-  setCorsPolicy(res: http.ServerResponse, policy: CorsPolicy) {
+  private setCorsPolicy(res: http.ServerResponse, policy: CorsPolicy) {
     policy.headers &&
       res.setHeader('Access-Control-Allow-Headers', policy.headers)
     policy.methods &&
@@ -135,7 +142,7 @@ export default class Server<T extends Function> {
       )
   }
 
-  async handleParameter(
+  private async handleParameter(
     req: http.IncomingMessage,
     info: ICollected
   ): Promise<{
@@ -228,7 +235,7 @@ export default class Server<T extends Function> {
     }
   }
 
-  handleParameterFromFiles(
+  private handleParameterFromFiles(
     req: http.IncomingMessage,
     parameter: Parameter,
     infoValue: CollectedValueType
@@ -264,7 +271,7 @@ export default class Server<T extends Function> {
     })
   }
 
-  handleParameterFromFile(
+  private handleParameterFromFile(
     req: http.IncomingMessage,
     parameter: Parameter,
     infoValue: CollectedValueType
@@ -296,7 +303,7 @@ export default class Server<T extends Function> {
     })
   }
 
-  handleParameterFromHeader(
+  private handleParameterFromHeader(
     req: http.IncomingMessage,
     parameter: Parameter,
     infoValue: CollectedValueType
@@ -310,7 +317,7 @@ export default class Server<T extends Function> {
     }
   }
 
-  handleParameterFromBody(
+  private handleParameterFromBody(
     req: http.IncomingMessage,
     parameter: Parameter,
     infoValue: CollectedValueType
@@ -338,7 +345,7 @@ export default class Server<T extends Function> {
     })
   }
 
-  handleParameterFromQuery(
+  private handleParameterFromQuery(
     req: http.IncomingMessage,
     parameter: Parameter,
     infoValue: CollectedValueType
@@ -355,7 +362,7 @@ export default class Server<T extends Function> {
     } as ParameterObjectType
   }
 
-  handleParameterFromParam(
+  private handleParameterFromParam(
     req: http.IncomingMessage,
     parameter: Parameter,
     infoValue: CollectedValueType
