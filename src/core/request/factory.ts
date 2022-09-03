@@ -1,4 +1,10 @@
-import { Method, METADATA_KEY, ModuleOption, Parameter } from './decorator'
+import {
+  Method,
+  METADATA_KEY,
+  ModuleOption,
+  Parameter,
+  CorsPolicy
+} from './decorator'
 
 type AsyncFunc = (...args: any[]) => Promise<any>
 
@@ -6,10 +12,14 @@ export interface ICollected {
   path: string
   requestMethod: Method
   requestHandler: AsyncFunc
+  corsPolicy: CorsPolicy
   requestHandlerParameters: Parameter[]
 }
 
-export const moduleFactory = <T extends Function>(moduleClass: T) => {
+export const moduleFactory = <T extends Function>(
+  moduleClass: T,
+  corsPolicy: CorsPolicy | undefined = undefined
+) => {
   const prototype = moduleClass.prototype
 
   const moduleOption = Reflect.getMetadata(
@@ -17,15 +27,20 @@ export const moduleFactory = <T extends Function>(moduleClass: T) => {
     prototype.constructor
   ) as ModuleOption | undefined
 
+  const moduleCorsPolicy = Reflect.getMetadata(
+    METADATA_KEY.Cors,
+    prototype.constructor
+  ) as CorsPolicy | undefined
+
   const collectedData: ICollected[] = []
   if (moduleOption?.controllers?.length) {
     moduleOption.controllers.forEach((r) => {
-      collectedData.push(...routerFactory(r))
+      collectedData.push(...routerFactory(r, moduleCorsPolicy || corsPolicy))
     })
   }
   if (moduleOption?.modules?.length) {
     moduleOption.modules.forEach((r) => {
-      collectedData.push(...moduleFactory(r))
+      collectedData.push(...moduleFactory(r, moduleCorsPolicy || corsPolicy))
     })
   }
 
@@ -41,7 +56,8 @@ export const moduleFactory = <T extends Function>(moduleClass: T) => {
 }
 
 export const routerFactory = <T extends Function>(
-  controllerClass: T
+  controllerClass: T,
+  moduleCorsPolicy: CorsPolicy | undefined = undefined
 ): ICollected[] => {
   const prototype = controllerClass.prototype
 
@@ -50,6 +66,11 @@ export const routerFactory = <T extends Function>(
     METADATA_KEY.PATH,
     prototype.constructor
   ) as string
+
+  const controllerCorsPolicy = Reflect.getMetadata(
+    METADATA_KEY.Cors,
+    prototype.constructor
+  ) as CorsPolicy | undefined
 
   // 获取非构造函数的方法
   const methods = Reflect.ownKeys(prototype).filter(
@@ -87,10 +108,16 @@ export const routerFactory = <T extends Function>(
       controllerClass,
       requestHandler
     )
+    const methodCorsPolicy = Reflect.getMetadata(
+      METADATA_KEY.Cors,
+      controllerClass.prototype,
+      requestHandler.name
+    ) as CorsPolicy | undefined
     return {
       path: `${rootPath}${path}`,
       requestMethod,
       requestHandler,
+      corsPolicy: methodCorsPolicy || controllerCorsPolicy || moduleCorsPolicy,
       requestHandlerParameters: queryParameterMetadatas.concat(
         paramParameterMetadatas,
         bodyParameterMetadatas,
@@ -102,6 +129,14 @@ export const routerFactory = <T extends Function>(
   })
 
   return collected
+}
+
+export const corsPolicyFactory = (object: Function, handler: AsyncFunc) => {
+  return Reflect.getMetadata(
+    METADATA_KEY.Cors,
+    object.prototype,
+    handler.name
+  ) as CorsPolicy
 }
 
 export const parameterFactory = (metadataKey: METADATA_KEY) => {

@@ -7,20 +7,22 @@ import {
   Header,
   Param,
   Post,
-  Query
+  Query,
+  MethodCors,
+  ControllerCors
 } from '../src/core/request/decorator'
 import { promises, createWriteStream } from 'fs'
 import { FileParameterData } from '../src/core/setup'
 
 @Controller('/user')
 export class UserController {
-  @Post('/list')
-  async userList(@File('file1') fileContent: FileParameterData) {
+  @Get('/list')
+  async userList() {
     // console.log(fileContent.fileInfo)
-    await promises.writeFile(
-      fileContent.fileInfo.fileName,
-      fileContent.fileData
-    )
+    // await promises.writeFile(
+    //   fileContent.fileInfo.fileName,
+    //   fileContent.fileData
+    // )
     // for (const uploadFile of fileContent) {
     //   await promises.writeFile(
     //     uploadFile.fileInfo.fileName,
