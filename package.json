@@ -18,6 +18,8 @@
   },
   "homepage": "https://github.com/ainuo5213/koa-decorators#readme",
   "dependencies": {
+    "@types/multiparty": "^0.0.33",
+    "multiparty": "^4.2.3",
     "reflect-metadata": "^0.1.13"
   },
   "devDependencies": {

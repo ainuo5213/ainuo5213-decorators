@@ -3,6 +3,8 @@ import { parse as parseUrl } from 'url'
 import { parse as parseQuery } from 'querystring'
 import { Parameter, ParameterFromType } from '../request/decorator'
 import { moduleFactory, ICollected } from '../request/factory'
+import multiparty, { Part } from 'multiparty'
+import fs from 'fs'
 
 export type ParameterObjectType = {
   parameterValue: any
@@ -10,17 +12,26 @@ export type ParameterObjectType = {
   parameterIndex: number
 }
 
+export type FileInfoData = {
+  fileData: Part
+  fileName: string
+  fieldName: string
+}
+
 export type FileParameterObjectType = ParameterObjectType & {
-  fileInfo: {
-    fileName: string
-  }
+  fileInfo: FileInfoData
+}
+
+export type FilesParameterObjectType = ParameterObjectType & {
+  fileInfos: FileInfoData[]
 }
 
 export type FileParameterData = {
   fileInfo: {
+    fieldName: string
     fileName: string
   }
-  fileData: any
+  fileData: Part
 }
 
 export type CollectedValueType = Pick<
@@ -79,9 +90,23 @@ export default class Server<T extends Function> {
             if (r.paramFrom === 'file') {
               const currentData = r as FileParameterObjectType
               return {
-                fileInfo: currentData.fileInfo,
-                fileData: currentData.parameterValue
+                fileInfo: {
+                  fileName: currentData.fileInfo.fileName,
+                  fieldName: currentData.fileInfo.fieldName
+                },
+                fileData: currentData.fileInfo.fileData
               } as FileParameterData
+            } else if (r.paramFrom === 'files') {
+              const currentData = r as FilesParameterObjectType
+              return currentData.fileInfos.map((r) => {
+                return {
+                  fileData: r.fileData,
+                  fileInfo: {
+                    fieldName: r.fieldName,
+                    fileName: r.fileName
+                  }
+                } as FileParameterData
+              })
             }
 
             return r.parameterValue
@@ -168,6 +193,15 @@ export default class Server<T extends Function> {
         if (fileParameterObject) {
           resultParameters.push(fileParameterObject)
         }
+      } else if (parameter.paramFrom === 'files') {
+        const filesParameterObject = await this.handleParameterFromFiles(
+          req,
+          parameter,
+          infoValue
+        )
+        if (filesParameterObject) {
+          resultParameters.push(filesParameterObject)
+        }
       }
     }
 
@@ -179,80 +213,68 @@ export default class Server<T extends Function> {
     }
   }
 
+  handleParameterFromFiles(
+    req: http.IncomingMessage,
+    parameter: Parameter,
+    infoValue: CollectedValueType
+  ): Promise<ParameterObjectType> {
+    const form = new multiparty.Form()
+    form.parse(req)
+    let fileInfos: FileInfoData[] = []
+    return new Promise((resolve, reject) => {
+      form.on('part', (part: Part) => {
+        part.on('data', () => {})
+        part.on('end', () => {
+          fileInfos.push({
+            fileData: part,
+            fileName: part.filename,
+            fieldName: part.name
+          } as FileInfoData)
+        })
+      })
+      form.on('close', () => {
+        resolve({
+          parameterIndex: parameter.index,
+          parameterValue: fileInfos.map((r) => r.fileData),
+          paramFrom: parameter.paramFrom,
+          fileInfos: fileInfos
+        } as FilesParameterObjectType)
+      })
+      form.on('error', (err) => {
+        reject(err)
+      })
+    })
+  }
+
   handleParameterFromFile(
     req: http.IncomingMessage,
     parameter: Parameter,
     infoValue: CollectedValueType
   ): Promise<ParameterObjectType> {
-    // 从content-type中获取当前文件的分隔符
-    const boundary = `--${
-      req.headers['content-type']!.split('; ')[1].split('=')[1]
-    }`
-
-    function splitBuffer(buffer: Buffer, separator: string) {
-      let result = []
-      let index = 0
-
-      while ((index = buffer.indexOf(separator)) != -1) {
-        result.push(buffer.slice(0, index))
-        buffer = buffer.slice(index + separator.length)
-      }
-      result.push(buffer)
-
-      return result
-    }
-
+    const form = new multiparty.Form()
+    form.parse(req)
+    let fileInfo: FileParameterObjectType
     return new Promise((resolve, reject) => {
-      let postBody: Buffer[] = []
-      // 每次req都是个新的请求，所以不用解绑，由v8引擎自己维护
-      const onChunk = (chunk: any) => {
-        postBody.push(chunk)
-      }
-      const onEnd = () => {
-        let buffer = Buffer.concat(postBody)
-        // 分割buffer，取得文件体
-        let result = splitBuffer(buffer, boundary)
-        // 删除头('')和尾的 --\r\n 结束标志的数据
-        result.pop()
-        result.shift()
-        // 将数据体的头和尾的\r\n删掉
-        result = result.map((item) => item.slice(2, item.length - 2))
-        // 开始处理数据，将数据体每一项数据中间的\r\n删掉
-        result.forEach((item) => {
-          let [info, ...data] = splitBuffer(item, '\r\n\r\n')
-
-          // 处理文件信息
-          const fileInfo = info.toString()
-          let infoResult: string[]
-          if (fileInfo.indexOf('\r\n') >= 0) {
-            infoResult = fileInfo.split('\r\n')[0].split('; ')
-          } else {
-            infoResult = fileInfo.split('; ')
+      form.on('part', (part: Part) => {
+        fileInfo = {
+          parameterIndex: parameter.index,
+          parameterValue: part,
+          paramFrom: parameter.paramFrom,
+          fileInfo: {
+            fileName: part.filename,
+            fieldName: part.name,
+            fileData: part
           }
-          let fieldName = infoResult[1].split('=')[1]
-          fieldName = fieldName.substring(1, fieldName.length - 1) // 去除双边的引号
-          let fileName = infoResult[2].split('=')[1]
-          fileName = fileName.substring(1, fileName.length - 1)
-          if (fieldName === parameter.injectParameterKey) {
-            resolve({
-              parameterIndex: parameter.index,
-              parameterValue: data,
-              paramFrom: parameter.paramFrom,
-              fileInfo: {
-                fileName: fileName
-              }
-            } as FileParameterObjectType)
-          } else {
-            reject(new Error('文件名和装饰器定义的文件名不同'))
-          }
-        })
-      }
-      const onError = (err: Error) => {
+        } as FileParameterObjectType
+        if (fileInfo.fileInfo.fileData.name === parameter.injectParameterKey) {
+          resolve(fileInfo)
+        } else {
+          reject(new Error('文件名和装饰器定义的文件名不同'))
+        }
+      })
+      form.on('error', (err) => {
         reject(err)
-      }
-      req.on('data', onChunk)
-      req.on('end', onEnd)
-      req.on('error', onError)
+      })
     })
   }
 

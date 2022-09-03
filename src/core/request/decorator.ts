@@ -65,15 +65,16 @@ function addParameter(
   }
 }
 
-const parameterDecoratorFactory = (metadataKey: METADATA_KEY) => {
+const parameterMoreDecoratorFactory = (metadataKey: METADATA_KEY) => {
   const paramFrom = metadataKey.slice('ioc:'.length) as ParameterFromType
   return (parameterName: ParameterType): ParameterDecorator =>
     addParameter(metadataKey, paramFrom, parameterName)
 }
 
-const bodyDecoratorFactory = (metadataKey: METADATA_KEY) => {
+const parameterWithoutDecoratorFactory = (metadataKey: METADATA_KEY) => {
+  const paramFrom = metadataKey.slice('ioc:'.length) as ParameterFromType
   return (): ParameterDecorator =>
-    addParameter(metadataKey, 'body', BodySymbolId)
+    addParameter(metadataKey, paramFrom, BodySymbolId)
 }
 
 export const Controller = (path?: string): ClassDecorator => {
@@ -94,7 +95,13 @@ export const Module = (option: ModuleOption): ClassDecorator => {
 }
 
 export const BodySymbolId = Symbol('body')
-export type ParameterFromType = 'query' | 'param' | 'body' | 'header' | 'file'
+export type ParameterFromType =
+  | 'query'
+  | 'param'
+  | 'body'
+  | 'header'
+  | 'file'
+  | 'files'
 export type Parameter = {
   index: number
   injectParameterKey: string | symbol
@@ -102,11 +109,12 @@ export type Parameter = {
 }
 
 // 参数装饰器
-export const Param = parameterDecoratorFactory(METADATA_KEY.PARAM)
-export const Query = parameterDecoratorFactory(METADATA_KEY.QUERY)
-export const Body = bodyDecoratorFactory(METADATA_KEY.BODY)
-export const Header = parameterDecoratorFactory(METADATA_KEY.HEADER)
-export const File = parameterDecoratorFactory(METADATA_KEY.File)
+export const Param = parameterMoreDecoratorFactory(METADATA_KEY.PARAM)
+export const Query = parameterMoreDecoratorFactory(METADATA_KEY.QUERY)
+export const Body = parameterWithoutDecoratorFactory(METADATA_KEY.BODY)
+export const Header = parameterMoreDecoratorFactory(METADATA_KEY.HEADER)
+export const File = parameterMoreDecoratorFactory(METADATA_KEY.File)
+export const Files = parameterWithoutDecoratorFactory(METADATA_KEY.Files)
 
 // 方法装饰器
 export const Get = methodDecoratorFactory(REQUEST_METHOD.GET)
