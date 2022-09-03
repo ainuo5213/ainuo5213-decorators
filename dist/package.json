@@ -1,5 +1,5 @@
 {
-  "name": "ainuo5213-decorators",
+  "name": "ainuo-decorators",
   "version": "1.0.0",
   "description": "类似nest装饰器写法的请求源码demo",
   "main": "index.js",
@@ -9,15 +9,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ainuo5213/ainuo5213-decorators.git"
+    "url": "git+https://github.com/ainuo5213/ainuo-decorators.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/ainuo5213/ainuo5213-decorators/issues"
+    "url": "https://github.com/ainuo5213/ainuo-decorators/issues"
   },
-  "homepage": "https://github.com/ainuo5213/ainuo5213-decorators#readme",
+  "homepage": "https://github.com/ainuo5213/ainuo-decorators#readme",
   "dependencies": {
     "@types/multiparty": "^0.0.33",
     "multiparty": "^4.2.3",
