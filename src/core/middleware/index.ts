@@ -1,6 +1,8 @@
 import { IncomingMessage, ServerResponse } from 'http'
 
+type MiddlewareType = 'controller' | 'module' | 'route'
 export abstract class AbsMiddleware {
+  abstract readonly __flag: MiddlewareType
   abstract use(
     request: IncomingMessage,
     response: ServerResponse,
@@ -9,7 +11,7 @@ export abstract class AbsMiddleware {
 }
 
 export abstract class ModuleMiddlware extends AbsMiddleware {
-  readonly __module = true
+  readonly __flag: MiddlewareType = 'module'
   abstract use(
     request: IncomingMessage,
     response: ServerResponse,
@@ -18,7 +20,7 @@ export abstract class ModuleMiddlware extends AbsMiddleware {
 }
 
 export abstract class ControllerMiddlware extends AbsMiddleware {
-  readonly __controller = true
+  readonly __flag: MiddlewareType = 'controller'
   abstract use(
     request: IncomingMessage,
     response: ServerResponse,
@@ -27,7 +29,7 @@ export abstract class ControllerMiddlware extends AbsMiddleware {
 }
 
 export abstract class RouteMiddlware extends AbsMiddleware {
-  readonly __route = true
+  readonly __flag: MiddlewareType = 'route'
   abstract use(
     request: IncomingMessage,
     response: ServerResponse,

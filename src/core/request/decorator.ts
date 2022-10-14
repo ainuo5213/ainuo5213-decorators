@@ -86,6 +86,11 @@ const parameterWithoutDecoratorFactory = (metadataKey: METADATA_KEY) => {
 
 export const Controller = (path?: string): ClassDecorator => {
   return (target) => {
+    if (!(target.prototype instanceof BaseController)) {
+      throw new TypeError(
+        target.name + ' not instance of ' + BaseController.name
+      )
+    }
     Reflect.defineMetadata(METADATA_KEY.PATH, path ?? '', target)
   }
 }
@@ -98,6 +103,10 @@ export type ModuleOption = Partial<{
 
 export const Module = (option: ModuleOption): ClassDecorator => {
   return (target) => {
+    if (!(target.prototype instanceof AppModule)) {
+      throw new TypeError(target.name + ' not instance of ' + AppModule.name)
+    }
+
     Reflect.defineMetadata(METADATA_KEY.MODULE, option, target)
   }
 }
@@ -133,27 +142,21 @@ export const Patch = methodDecoratorFactory(REQUEST_METHOD.PATCH)
 export const Delete = methodDecoratorFactory(REQUEST_METHOD.DELETE)
 export const Head = methodDecoratorFactory(REQUEST_METHOD.HEAD)
 
-const ClassMiddleWare = (middleware: AbsMiddleware): ClassDecorator => {
-  return (target) => {
-    Reflect.defineMetadata(METADATA_KEY.MIDDLEWARE, middleware, target)
-  }
-}
-
-const MethodMiddleWare = (middleware: AbsMiddleware): MethodDecorator => {
-  return (target, key, descriptor) => {
-    Reflect.defineMetadata(METADATA_KEY.MIDDLEWARE, middleware, target, key)
-  }
-}
-
-export const Middleware = (
-  middleware: AbsMiddleware
-): MethodDecorator | ClassDecorator => {
+export function Middleware(middleware: typeof AbsMiddleware): ClassDecorator
+export function Middleware(middleware: typeof AbsMiddleware): MethodDecorator
+export function Middleware(
+  middleware: typeof AbsMiddleware
+): MethodDecorator | ClassDecorator {
   if (
-    (middleware as ModuleMiddlware).__module ||
-    (middleware as ControllerMiddlware).__controller
+    middleware.prototype.__flag === 'module' ||
+    middleware.prototype.__flag === 'controller'
   ) {
-    return ClassMiddleWare(middleware)
+    return (target: object) => {
+      Reflect.defineMetadata(METADATA_KEY.MIDDLEWARE, middleware, target)
+    }
   } else {
-    return MethodMiddleWare(middleware)
+    return (target, key, descriptor) => {
+      Reflect.defineMetadata(METADATA_KEY.MIDDLEWARE, middleware, target, key)
+    }
   }
 }
