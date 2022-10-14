@@ -1,7 +1,7 @@
 import http from 'http'
 import { parse as parseUrl } from 'url'
 import { parse as parseQuery } from 'querystring'
-import { CorsPolicy, Parameter, ParameterFromType } from '../request/decorator'
+import { Parameter, ParameterFromType } from '../request/decorator'
 import { moduleFactory, ICollected } from '../request/factory'
 import multiparty, { Part } from 'multiparty'
 
@@ -119,27 +119,11 @@ export default class Server<T extends Function> {
           })
         )
         .then((data) => {
-          if (info.corsPolicy) {
-            this.setCorsPolicy(res, info.corsPolicy)
-          }
           res.writeHead(200, { 'Content-Type': 'application/json' })
           res.end(JSON.stringify(data))
         })
     }
     return matched
-  }
-
-  private setCorsPolicy(res: http.ServerResponse, policy: CorsPolicy) {
-    policy.headers &&
-      res.setHeader('Access-Control-Allow-Headers', policy.headers)
-    policy.methods &&
-      res.setHeader('Access-Control-Allow-Methods', policy.methods)
-    policy.origin && res.setHeader('Access-Control-Allow-Origin', policy.origin)
-    policy.credentials &&
-      res.setHeader(
-        'Access-Control-Allow-Credentials',
-        String(policy.credentials)
-      )
   }
 
   private async handleParameter(
