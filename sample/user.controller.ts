@@ -7,9 +7,7 @@ import {
   Header,
   Param,
   Post,
-  Query,
-  MethodCors,
-  ControllerCors
+  Query
 } from '../src/core/request/decorator'
 import { promises, createWriteStream } from 'fs'
 import { FileParameterData } from '../src/core/setup'

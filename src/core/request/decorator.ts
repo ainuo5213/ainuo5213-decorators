@@ -1,4 +1,9 @@
 import 'reflect-metadata'
+import {
+  AbsMiddleware,
+  ControllerMiddlware,
+  ModuleMiddlware
+} from '../middleware'
 
 type UppercaseMethod =
   | 'GET'
@@ -20,8 +25,7 @@ export enum METADATA_KEY {
   BODY = 'ioc:body',
   HEADER = 'ioc:header',
   File = 'ioc:file',
-  Files = 'ioc:files',
-  Cors = 'ioc:cros'
+  Files = 'ioc:files'
 }
 
 enum REQUEST_METHOD {
@@ -126,32 +130,31 @@ export const Patch = methodDecoratorFactory(REQUEST_METHOD.PATCH)
 export const Delete = methodDecoratorFactory(REQUEST_METHOD.DELETE)
 export const Head = methodDecoratorFactory(REQUEST_METHOD.HEAD)
 
-export type CorsPolicy = {
-  origin?: string
-  credentials?: boolean
-  headers?: string
-  methods?: string
+const ClassMiddleWare = (middleware: AbsMiddleware): ClassDecorator => {
+  return (target) => {
+    Reflect.defineMetadata(METADATA_KEY.MIDDLEWARE, middleware, target)
+  }
 }
-export const MethodCors = (policy?: CorsPolicy): MethodDecorator => {
+
+const MethodMiddleWare = (middleware: AbsMiddleware): MethodDecorator => {
   return (target, key, descriptor) => {
-    if (policy) {
-      Reflect.defineMetadata(METADATA_KEY.Cors, policy, target, key)
-    }
+    Reflect.defineMetadata(METADATA_KEY.MIDDLEWARE, middleware, target, key)
   }
 }
 
-export const ControllerCors = (policy?: CorsPolicy): ClassDecorator => {
-  return (target) => {
-    if (policy) {
-      Reflect.defineMetadata(METADATA_KEY.Cors, policy, target)
-    }
+const Middleware = (
+  middleware: AbsMiddleware
+): MethodDecorator | ClassDecorator => {
+  if (
+    (middleware as ModuleMiddlware).__module ||
+    (middleware as ControllerMiddlware).__controller
+  ) {
+    return ClassMiddleWare(middleware)
+  } else {
+    return MethodMiddleWare(middleware)
   }
 }
 
-export const ModuleCors = (policy?: CorsPolicy): ClassDecorator => {
-  return (target) => {
-    if (policy) {
-      Reflect.defineMetadata(METADATA_KEY.Cors, policy, target)
-    }
-  }
+export default {
+  Middleware
 }

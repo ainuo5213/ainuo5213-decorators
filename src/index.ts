@@ -1,7 +1,4 @@
 export {
-  ModuleCors,
-  ControllerCors,
-  MethodCors,
   Head,
   Delete,
   Patch,
