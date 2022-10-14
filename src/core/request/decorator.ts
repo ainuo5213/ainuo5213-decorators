@@ -3,7 +3,8 @@ import { BaseController } from '../controller'
 import {
   AbsMiddleware,
   ControllerMiddlware,
-  ModuleMiddlware
+  ModuleMiddlware,
+  RouteMiddlware
 } from '../middleware'
 import { AppModule } from '../module'
 
@@ -42,7 +43,7 @@ enum REQUEST_METHOD {
 
 const methodDecoratorFactory = (method: REQUEST_METHOD) => {
   return (path: string): MethodDecorator => {
-    return (_target, _key, descriptor) => {
+    return (_, _key, descriptor) => {
       Reflect.defineMetadata(METADATA_KEY.METHOD, method, descriptor.value!)
       Reflect.defineMetadata(METADATA_KEY.PATH, path, descriptor.value!)
     }
@@ -95,10 +96,12 @@ export const Controller = (path?: string): ClassDecorator => {
   }
 }
 
+export type MiddlewareType = typeof AbsMiddleware
+
 export type ModuleOption = Partial<{
   controllers: typeof BaseController[]
   modules: typeof AppModule[]
-  middleware: typeof AbsMiddleware[]
+  middleware: MiddlewareType[]
 }>
 
 export const Module = (option: ModuleOption): ClassDecorator => {
@@ -142,21 +145,63 @@ export const Patch = methodDecoratorFactory(REQUEST_METHOD.PATCH)
 export const Delete = methodDecoratorFactory(REQUEST_METHOD.DELETE)
 export const Head = methodDecoratorFactory(REQUEST_METHOD.HEAD)
 
-export function Middleware(middleware: typeof AbsMiddleware): ClassDecorator
-export function Middleware(middleware: typeof AbsMiddleware): MethodDecorator
-export function Middleware(
-  middleware: typeof AbsMiddleware
-): MethodDecorator | ClassDecorator {
-  if (
-    middleware.prototype.__flag === 'module' ||
-    middleware.prototype.__flag === 'controller'
-  ) {
-    return (target: object) => {
-      Reflect.defineMetadata(METADATA_KEY.MIDDLEWARE, middleware, target)
-    }
+function checkTypeError(
+  middlewares: MiddlewareType[],
+  predict: (middleware: MiddlewareType) => boolean
+) {
+  const typeErrorLength = middlewares
+    .map((middleware) => {
+      return predict(middleware)
+    })
+    .filter((r) => !r).length
+
+  return typeErrorLength > 1
+}
+function getMiddlewares(middlewares: MiddlewareType[] | MiddlewareType) {
+  let _middlewares
+  if (!Array.isArray(middlewares)) {
+    _middlewares = [middlewares]
   } else {
-    return (target, key, descriptor) => {
-      Reflect.defineMetadata(METADATA_KEY.MIDDLEWARE, middleware, target, key)
+    _middlewares = middlewares
+  }
+  return _middlewares
+}
+export function InjectClassMiddleware(
+  middlewares: MiddlewareType[] | MiddlewareType
+): ClassDecorator {
+  return (target) => {
+    const _middlewares = getMiddlewares(middlewares)
+    const isError = checkTypeError(_middlewares, (middleware) => {
+      return (
+        middleware.prototype instanceof ModuleMiddlware ||
+        middleware.prototype instanceof ControllerMiddlware
+      )
+    })
+    if (isError) {
+      throw new TypeError('inject middleware error')
+    } else {
+      Reflect.defineMetadata(METADATA_KEY.MIDDLEWARE, _middlewares, target)
+    }
+  }
+}
+
+export function InjectMethodMiddleware(
+  middlewares: MiddlewareType[] | MiddlewareType
+): MethodDecorator {
+  return (target, key, descriptor) => {
+    const _middlewares = getMiddlewares(middlewares)
+    const isError = checkTypeError(_middlewares, (middleware) => {
+      return middleware.prototype instanceof RouteMiddlware
+    })
+    if (isError) {
+      throw new TypeError('inject middleware error')
+    } else {
+      Reflect.defineMetadata(
+        METADATA_KEY.MIDDLEWARE,
+        _middlewares,
+        descriptor.value!,
+        key
+      )
     }
   }
 }

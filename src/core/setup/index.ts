@@ -4,6 +4,7 @@ import { parse as parseQuery } from 'querystring'
 import { Parameter, ParameterFromType } from '../request/decorator'
 import { moduleFactory, ICollected } from '../request/factory'
 import multiparty, { Part } from 'multiparty'
+import { AbsMiddleware } from '../middleware'
 
 export type ParameterObjectType = {
   parameterValue: any
@@ -43,6 +44,7 @@ export default class Server<T extends Function> {
   private static instance: Server<Function>
   private constructor(module: T) {
     this.collected = moduleFactory(module)
+    console.log(this.collected)
   }
   public static create(module: Function) {
     if (!Server.instance) {
@@ -119,6 +121,20 @@ export default class Server<T extends Function> {
           })
         )
         .then((data) => {
+          if (info.middlewares.length) {
+            const next = () => {
+              const middleware = info.middlewares.shift()
+              if (middleware) {
+                const middlewareInstance = Reflect.construct(
+                  middleware as Function,
+                  []
+                ) as AbsMiddleware
+
+                middlewareInstance.use(req, res, next)
+              }
+            }
+            next()
+          }
           res.writeHead(200, { 'Content-Type': 'application/json' })
           res.end(JSON.stringify(data))
         })

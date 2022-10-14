@@ -1,8 +1,10 @@
-import UserModule from './user.module'
-import ToyModule from './toy.module'
-import { Middleware, Module } from '../src/core/request/decorator'
-import CorsMiddleware from './CorsMiddleware'
+import { InjectClassMiddleware, Module } from '../src/core/request/decorator'
+import { ModuleCorsMiddleware, ModuleCorsMiddleware1 } from './CorsMiddleware'
+import { AppModule } from '../src/core/module'
+import { ToyController } from './toy.controller'
 
-@Middleware(CorsMiddleware)
-@Module({})
-export default class IndexModule {}
+@InjectClassMiddleware([ModuleCorsMiddleware, ModuleCorsMiddleware1])
+@Module({
+  controllers: [ToyController]
+})
+export default class IndexModule extends AppModule {}

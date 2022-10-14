@@ -4,7 +4,7 @@
   "description": "类似nest装饰器写法的请求源码demo",
   "main": "index.js",
   "scripts": {
-    "dev": "ts-node ./sample/index.ts",
+    "dev": "nodemon ./sample/index.ts",
     "build": "tsc"
   },
   "repository": {
@@ -21,6 +21,7 @@
   "dependencies": {
     "@types/multiparty": "^0.0.33",
     "multiparty": "^4.2.3",
+    "nodemon": "^2.0.20",
     "reflect-metadata": "^0.1.13"
   },
   "devDependencies": {

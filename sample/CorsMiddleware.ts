@@ -1,8 +1,34 @@
 import { IncomingMessage, ServerResponse } from 'http'
-import { ModuleMiddlware } from '../src/core/middleware'
+import {
+  ControllerMiddlware,
+  ModuleMiddlware,
+  RouteMiddlware
+} from '../src/core/middleware'
 
-export default class CorsMiddleware extends ModuleMiddlware {
+export class ModuleCorsMiddleware extends ModuleMiddlware {
   use(req: IncomingMessage, res: ServerResponse, next: () => void) {
-    console.log(1111)
+    console.log('ModuleCorsMiddleware')
+    next()
+  }
+}
+
+export class ModuleCorsMiddleware1 extends ModuleMiddlware {
+  use(req: IncomingMessage, res: ServerResponse, next: () => void) {
+    console.log('ModuleCorsMiddleware')
+    next()
+  }
+}
+
+export class ControllerCorsMiddleware extends ControllerMiddlware {
+  use(req: IncomingMessage, res: ServerResponse, next: () => void) {
+    console.log('ControllerCorsMiddleware')
+    next()
+  }
+}
+
+export class RouteCorsMiddleware extends RouteMiddlware {
+  use(req: IncomingMessage, res: ServerResponse, next: () => void) {
+    console.log('RouteCorsMiddleware')
+    next()
   }
 }

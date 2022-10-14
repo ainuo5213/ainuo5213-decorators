@@ -1,4 +1,10 @@
-import { Method, METADATA_KEY, ModuleOption, Parameter } from './decorator'
+import {
+  Method,
+  METADATA_KEY,
+  ModuleOption,
+  Parameter,
+  MiddlewareType
+} from './decorator'
 
 type AsyncFunc = (...args: any[]) => Promise<any>
 
@@ -7,26 +13,44 @@ export interface ICollected {
   requestMethod: Method
   requestHandler: AsyncFunc
   requestHandlerParameters: Parameter[]
+  middlewares: MiddlewareType[]
 }
 
-export const moduleFactory = <T extends Function>(moduleClass: T) => {
+export const moduleFactory = <T extends Function>(
+  moduleClass: T,
+  middlewares: MiddlewareType[] = []
+) => {
   const prototype = moduleClass.prototype
 
   const moduleOption = Reflect.getMetadata(
     METADATA_KEY.MODULE,
     prototype.constructor
   ) as ModuleOption | undefined
-  console.log(moduleOption)
-
   const collectedData: ICollected[] = []
+  if (!moduleOption) {
+    return collectedData
+  }
+
+  let moduleMiddlewares: MiddlewareType[] = []
+
+  if (moduleOption?.middleware?.length) {
+    moduleMiddlewares = middlewares.concat(moduleOption.middleware)
+  }
+
+  moduleMiddlewares = moduleMiddlewares.concat(
+    (Reflect.getMetadata(METADATA_KEY.MIDDLEWARE, prototype.constructor) as
+      | MiddlewareType[]
+      | undefined) || []
+  )
+
   if (moduleOption?.controllers?.length) {
     moduleOption.controllers.forEach((r) => {
-      collectedData.push(...routerFactory(r))
+      collectedData.push(...routerFactory(r, moduleMiddlewares))
     })
   }
   if (moduleOption?.modules?.length) {
     moduleOption.modules.forEach((r) => {
-      collectedData.push(...moduleFactory(r))
+      collectedData.push(...moduleFactory(r, moduleMiddlewares))
     })
   }
 
@@ -37,12 +61,12 @@ export const moduleFactory = <T extends Function>(moduleClass: T) => {
   if (beforeLength !== afterLength) {
     throw new Error('含有重复的路由')
   }
-
   return collectedData
 }
 
 const routerFactory = <T extends Function>(
-  controllerClass: T
+  controllerClass: T,
+  middlewares: MiddlewareType[]
 ): ICollected[] => {
   const prototype = controllerClass.prototype
 
@@ -51,6 +75,11 @@ const routerFactory = <T extends Function>(
     METADATA_KEY.PATH,
     prototype.constructor
   ) as string
+
+  const controllerMiddleware =
+    (Reflect.getMetadata(METADATA_KEY.MIDDLEWARE, prototype.constructor) as
+      | MiddlewareType[]
+      | undefined) || []
 
   // 获取非构造函数的方法
   const methods = Reflect.ownKeys(prototype).filter(
@@ -70,6 +99,28 @@ const routerFactory = <T extends Function>(
         ''
       ) as string
     ).toUpperCase() as Method
+
+    const routeMiddleware =
+      (Reflect.getMetadata(
+        METADATA_KEY.MIDDLEWARE,
+        requestHandler,
+        methodKey
+      ) as MiddlewareType[] | undefined) || []
+    const tmpResultMiddlewares = middlewares.concat(
+      controllerMiddleware,
+      routeMiddleware
+    )
+
+    // 去除重复注册的中间件
+    const resultMiddlewares: MiddlewareType[] = []
+    const resultMiddlewareNames: string[] = []
+    tmpResultMiddlewares.forEach((middleware) => {
+      if (!resultMiddlewareNames.includes(middleware.name)) {
+        resultMiddlewareNames.push(middleware.name)
+        resultMiddlewares.push(middleware)
+      }
+    })
+
     const queryParameterMetadatas = queryFactory(
       controllerClass,
       requestHandler
@@ -98,7 +149,8 @@ const routerFactory = <T extends Function>(
         headerParameterMetadatas,
         fileParameterMetadatas,
         filesParameterMetadatas
-      )
+      ),
+      middlewares: resultMiddlewares
     } as ICollected
   })
 

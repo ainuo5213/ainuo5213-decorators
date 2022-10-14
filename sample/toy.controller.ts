@@ -1,8 +1,17 @@
 import { BaseController } from '../src/core/controller'
-import { Controller, Get, Post } from '../src/core/request/decorator'
+import {
+  Controller,
+  Get,
+  InjectClassMiddleware,
+  InjectMethodMiddleware,
+  Post
+} from '../src/core/request/decorator'
+import { ControllerCorsMiddleware, RouteCorsMiddleware } from './CorsMiddleware'
 
+@InjectClassMiddleware(ControllerCorsMiddleware)
 @Controller('/toy')
 export class ToyController extends BaseController {
+  @InjectMethodMiddleware(RouteCorsMiddleware)
   @Get('/list')
   async userList() {
     return {
