@@ -95,32 +95,10 @@ export default class Server<T extends Function> {
       info
         .requestHandler(
           ...parameters.map((r) => {
-            if (r.paramFrom === 'file') {
-              const currentData = r as FileParameterObjectType
-              return {
-                fileInfo: {
-                  fileName: currentData.fileInfo.fileName,
-                  fieldName: currentData.fileInfo.fieldName
-                },
-                fileData: currentData.fileInfo.fileData
-              } as FileParameterData
-            } else if (r.paramFrom === 'files') {
-              const currentData = r as FilesParameterObjectType
-              return currentData.fileInfos.map((r) => {
-                return {
-                  fileData: r.fileData,
-                  fileInfo: {
-                    fieldName: r.fieldName,
-                    fileName: r.fileName
-                  }
-                } as FileParameterData
-              })
-            }
-
             return r.parameterValue
           })
         )
-        .then((data) => {
+        .then(async (data) => {
           if (info.middlewares.length) {
             const next = () => {
               const middleware = info.middlewares.shift()
@@ -130,10 +108,16 @@ export default class Server<T extends Function> {
                   []
                 ) as AbsMiddleware
 
-                middlewareInstance.use(req, res, next)
+                try {
+                  return Promise.resolve(middlewareInstance.use(req, res, next))
+                } catch (err) {
+                  return Promise.reject(err)
+                }
+              } else {
+                return Promise.resolve()
               }
             }
-            next()
+            await next()
           }
           res.writeHead(200, { 'Content-Type': 'application/json' })
           res.end(JSON.stringify(data))
@@ -206,24 +190,6 @@ export default class Server<T extends Function> {
         if (headerParameterObject) {
           resultParameters.push(headerParameterObject)
         }
-      } else if (parameter.paramFrom === 'file') {
-        const fileParameterObject = await this.handleParameterFromFile(
-          req,
-          parameter,
-          infoValue
-        )
-        if (fileParameterObject) {
-          resultParameters.push(fileParameterObject)
-        }
-      } else if (parameter.paramFrom === 'files') {
-        const filesParameterObject = await this.handleParameterFromFiles(
-          req,
-          parameter,
-          infoValue
-        )
-        if (filesParameterObject) {
-          resultParameters.push(filesParameterObject)
-        }
       }
     }
 
@@ -233,74 +199,6 @@ export default class Server<T extends Function> {
       matched: matched,
       parameters: resultParameters
     }
-  }
-
-  private handleParameterFromFiles(
-    req: http.IncomingMessage,
-    parameter: Parameter,
-    infoValue: CollectedValueType
-  ): Promise<ParameterObjectType> {
-    const form = new multiparty.Form()
-    form.parse(req)
-    let fileInfos: FileInfoData[] = []
-    return new Promise((resolve, reject) => {
-      form.on('part', (part: Part) => {
-        const buffer: Buffer[] = []
-        part.on('data', (chunk) => {
-          buffer.push(chunk)
-        })
-        part.on('end', () => {
-          fileInfos.push({
-            fieldName: part.name,
-            fileData: buffer,
-            fileName: part.filename
-          })
-        })
-      })
-      form.on('close', () => {
-        resolve({
-          parameterIndex: parameter.index,
-          parameterValue: fileInfos.map((r) => r.fileData),
-          paramFrom: parameter.paramFrom,
-          fileInfos: fileInfos
-        } as FilesParameterObjectType)
-      })
-      form.on('error', (err) => {
-        reject(err)
-      })
-    })
-  }
-
-  private handleParameterFromFile(
-    req: http.IncomingMessage,
-    parameter: Parameter,
-    infoValue: CollectedValueType
-  ): Promise<ParameterObjectType> {
-    const form = new multiparty.Form()
-    form.parse(req)
-    let fileInfo: FileParameterObjectType
-    return new Promise((resolve, reject) => {
-      form.on('part', (part: Part) => {
-        fileInfo = {
-          parameterIndex: parameter.index,
-          parameterValue: part,
-          paramFrom: parameter.paramFrom,
-          fileInfo: {
-            fileName: part.filename,
-            fieldName: part.name,
-            fileData: part
-          }
-        } as FileParameterObjectType
-        if (fileInfo.fileInfo.fileData.name === parameter.injectParameterKey) {
-          resolve(fileInfo)
-        } else {
-          reject(new Error('文件名和装饰器定义的文件名不同'))
-        }
-      })
-      form.on('error', (err) => {
-        reject(err)
-      })
-    })
   }
 
   private handleParameterFromHeader(

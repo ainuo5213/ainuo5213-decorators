@@ -14,8 +14,7 @@ export class ModuleCorsMiddleware extends ModuleMiddlware {
 
 export class ModuleCorsMiddleware1 extends ModuleMiddlware {
   use(req: IncomingMessage, res: ServerResponse, next: () => void) {
-    console.log('ModuleCorsMiddleware')
-    next()
+    console.log('ModuleCorsMiddleware1')
   }
 }
 
