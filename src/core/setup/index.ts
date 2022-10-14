@@ -3,35 +3,12 @@ import { parse as parseUrl } from 'url'
 import { parse as parseQuery } from 'querystring'
 import { Parameter, ParameterFromType } from '../request/decorator'
 import { moduleFactory, ICollected } from '../request/factory'
-import multiparty, { Part } from 'multiparty'
 import { AbsMiddleware } from '../middleware'
 
 export type ParameterObjectType = {
   parameterValue: any
   paramFrom: ParameterFromType
   parameterIndex: number
-}
-
-export type FileInfoData = {
-  fileData: any
-  fileName: string
-  fieldName: string
-}
-
-export type FileParameterObjectType = ParameterObjectType & {
-  fileInfo: FileInfoData
-}
-
-export type FilesParameterObjectType = ParameterObjectType & {
-  fileInfos: FileInfoData[]
-}
-
-export type FileParameterData = {
-  fileInfo: {
-    fieldName: string
-    fileName: string
-  }
-  fileData: any
 }
 
 export type CollectedValueType = Pick<
@@ -44,7 +21,6 @@ export default class Server<T extends Function> {
   private static instance: Server<Function>
   private constructor(module: T) {
     this.collected = moduleFactory(module)
-    console.log(this.collected)
   }
   public static create(module: Function) {
     if (!Server.instance) {
@@ -92,33 +68,43 @@ export default class Server<T extends Function> {
     const { parameters, matched } = await this.handleParameter(req, info)
 
     if (matched) {
-      info
-        .requestHandler(
+      const context: Map<any, unknown> = new Map()
+      if (info.middlewares.length) {
+        const next = async () => {
+          const middleware = info.middlewares.shift()
+          if (middleware) {
+            const middlewareInstance = Reflect.construct(
+              middleware as Function,
+              []
+            ) as AbsMiddleware
+
+            try {
+              const result = await Promise.resolve(
+                middlewareInstance.use(req, res, next)
+              )
+              const { key, context: _context } =
+                middlewareInstance.getConfigContext()
+
+              context.set(key, _context)
+              return result
+            } catch (err) {
+              return Promise.reject(err)
+            }
+          } else {
+            return Promise.resolve()
+          }
+        }
+        await next()
+      }
+
+      info.requestInstance.context = context
+      info.requestHandler
+        .bind(info.requestInstance)(
           ...parameters.map((r) => {
             return r.parameterValue
           })
         )
         .then(async (data) => {
-          if (info.middlewares.length) {
-            const next = () => {
-              const middleware = info.middlewares.shift()
-              if (middleware) {
-                const middlewareInstance = Reflect.construct(
-                  middleware as Function,
-                  []
-                ) as AbsMiddleware
-
-                try {
-                  return Promise.resolve(middlewareInstance.use(req, res, next))
-                } catch (err) {
-                  return Promise.reject(err)
-                }
-              } else {
-                return Promise.resolve()
-              }
-            }
-            await next()
-          }
           res.writeHead(200, { 'Content-Type': 'application/json' })
           res.end(JSON.stringify(data))
         })

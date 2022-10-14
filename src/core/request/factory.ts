@@ -1,3 +1,4 @@
+import { BaseController } from '../controller'
 import {
   Method,
   METADATA_KEY,
@@ -14,6 +15,7 @@ export interface ICollected {
   requestHandler: AsyncFunc
   requestHandlerParameters: Parameter[]
   middlewares: MiddlewareType[]
+  requestInstance: BaseController
 }
 
 export const moduleFactory = <T extends Function>(
@@ -150,7 +152,8 @@ const routerFactory = <T extends Function>(
         fileParameterMetadatas,
         filesParameterMetadatas
       ),
-      middlewares: resultMiddlewares
+      middlewares: resultMiddlewares,
+      requestInstance: controllerClass.prototype as BaseController
     } as ICollected
   })
 

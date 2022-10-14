@@ -14,6 +14,8 @@ export class ToyController extends BaseController {
   @InjectMethodMiddleware(RouteCorsMiddleware)
   @Get('/list')
   async userList() {
+    console.log(this.context)
+
     return {
       success: true,
       code: 10000,

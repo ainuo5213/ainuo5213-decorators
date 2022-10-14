@@ -1,9 +1,9 @@
 import { InjectClassMiddleware, Module } from '../src/core/request/decorator'
-import { ModuleCorsMiddleware, ModuleCorsMiddleware1 } from './CorsMiddleware'
+import { ModuleCorsMiddleware } from './CorsMiddleware'
 import { AppModule } from '../src/core/module'
 import { ToyController } from './toy.controller'
 
-@InjectClassMiddleware([ModuleCorsMiddleware, ModuleCorsMiddleware1])
+@InjectClassMiddleware([ModuleCorsMiddleware])
 @Module({
   controllers: [ToyController]
 })
