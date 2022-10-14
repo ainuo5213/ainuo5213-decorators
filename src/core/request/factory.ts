@@ -16,6 +16,7 @@ export const moduleFactory = <T extends Function>(moduleClass: T) => {
     METADATA_KEY.MODULE,
     prototype.constructor
   ) as ModuleOption | undefined
+  console.log(moduleOption)
 
   const collectedData: ICollected[] = []
   if (moduleOption?.controllers?.length) {

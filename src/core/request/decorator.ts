@@ -1,9 +1,11 @@
 import 'reflect-metadata'
+import { BaseController } from '../controller'
 import {
   AbsMiddleware,
   ControllerMiddlware,
   ModuleMiddlware
 } from '../middleware'
+import { AppModule } from '../module'
 
 type UppercaseMethod =
   | 'GET'
@@ -89,8 +91,9 @@ export const Controller = (path?: string): ClassDecorator => {
 }
 
 export type ModuleOption = Partial<{
-  controllers: Function[]
-  modules: Function[]
+  controllers: typeof BaseController[]
+  modules: typeof AppModule[]
+  middleware: typeof AbsMiddleware[]
 }>
 
 export const Module = (option: ModuleOption): ClassDecorator => {
@@ -142,7 +145,7 @@ const MethodMiddleWare = (middleware: AbsMiddleware): MethodDecorator => {
   }
 }
 
-const Middleware = (
+export const Middleware = (
   middleware: AbsMiddleware
 ): MethodDecorator | ClassDecorator => {
   if (
@@ -153,8 +156,4 @@ const Middleware = (
   } else {
     return MethodMiddleWare(middleware)
   }
-}
-
-export default {
-  Middleware
 }

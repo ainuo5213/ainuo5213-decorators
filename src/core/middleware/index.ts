@@ -8,8 +8,8 @@ export abstract class AbsMiddleware {
   ): void
 }
 
-export abstract class ModuleMiddlware implements AbsMiddleware {
-  __module = true
+export abstract class ModuleMiddlware extends AbsMiddleware {
+  readonly __module = true
   abstract use(
     request: IncomingMessage,
     response: ServerResponse,
@@ -17,8 +17,8 @@ export abstract class ModuleMiddlware implements AbsMiddleware {
   ): void
 }
 
-export abstract class ControllerMiddlware implements AbsMiddleware {
-  __controller = true
+export abstract class ControllerMiddlware extends AbsMiddleware {
+  readonly __controller = true
   abstract use(
     request: IncomingMessage,
     response: ServerResponse,
@@ -26,8 +26,8 @@ export abstract class ControllerMiddlware implements AbsMiddleware {
   ): void
 }
 
-export abstract class RouteMiddlware implements AbsMiddleware {
-  __route = true
+export abstract class RouteMiddlware extends AbsMiddleware {
+  readonly __route = true
   abstract use(
     request: IncomingMessage,
     response: ServerResponse,

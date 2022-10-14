@@ -11,9 +11,10 @@ import {
 } from '../src/core/request/decorator'
 import { promises, createWriteStream } from 'fs'
 import { FileParameterData } from '../src/core/setup'
+import { BaseController } from '../src/core/controller'
 
 @Controller('/user')
-export class UserController {
+export class UserController extends BaseController {
   @Get('/list')
   async userList() {
     // console.log(fileContent.fileInfo)

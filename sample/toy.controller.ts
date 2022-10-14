@@ -1,7 +1,8 @@
+import { BaseController } from '../src/core/controller'
 import { Controller, Get, Post } from '../src/core/request/decorator'
 
 @Controller('/toy')
-export class ToyController {
+export class ToyController extends BaseController {
   @Get('/list')
   async userList() {
     return {

@@ -1,7 +1,8 @@
+import { AppModule } from '../src/core/module'
 import { Module } from '../src/core/request/decorator'
 import { ToyController } from './toy.controller'
 
 @Module({
   controllers: [ToyController]
 })
-export default class ToyModule {}
+export default class ToyModule extends AppModule {}
