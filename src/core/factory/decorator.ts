@@ -26,9 +26,7 @@ export enum METADATA_KEY {
   PARAM = 'ioc:param',
   QUERY = 'ioc:query',
   BODY = 'ioc:body',
-  HEADER = 'ioc:header',
-  File = 'ioc:file',
-  Files = 'ioc:files'
+  HEADER = 'ioc:header'
 }
 
 enum REQUEST_METHOD {
@@ -115,13 +113,7 @@ export const Module = (option: ModuleOption): ClassDecorator => {
 }
 
 const BodySymbolId = Symbol('body')
-export type ParameterFromType =
-  | 'query'
-  | 'param'
-  | 'body'
-  | 'header'
-  | 'file'
-  | 'files'
+export type ParameterFromType = 'query' | 'param' | 'body' | 'header'
 export type Parameter = {
   index: number
   injectParameterKey: string | symbol
@@ -133,8 +125,6 @@ export const Param = parameterMoreDecoratorFactory(METADATA_KEY.PARAM)
 export const Query = parameterMoreDecoratorFactory(METADATA_KEY.QUERY)
 export const Body = parameterWithoutDecoratorFactory(METADATA_KEY.BODY)
 export const Header = parameterMoreDecoratorFactory(METADATA_KEY.HEADER)
-export const File = parameterMoreDecoratorFactory(METADATA_KEY.File)
-export const Files = parameterWithoutDecoratorFactory(METADATA_KEY.Files)
 
 // 方法装饰器
 export const Get = methodDecoratorFactory(REQUEST_METHOD.GET)
