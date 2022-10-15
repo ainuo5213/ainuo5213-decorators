@@ -2,7 +2,7 @@
  * @Author: 孙永刚 1660998482@qq.com
  * @Date: 2022-10-15 17:01:04
  * @LastEditors: 孙永刚 1660998482@qq.com
- * @LastEditTime: 2022-10-15 19:33:03
+ * @LastEditTime: 2022-10-15 20:14:50
  * @FilePath: \ainuo5213-decorators\sample\toy.controller.ts
  * @Description:
  *
@@ -14,29 +14,33 @@ import {
   InjectClassMiddleware,
   InjectMethodMiddleware
 } from '../src/core/factory/decorator'
-import { Get } from '../src/packages/route/get'
+import { Post } from '../src/packages/route/post'
 import { Query } from '../src/packages/param/query'
 
 import { ControllerCorsMiddleware, RouteCorsMiddleware } from './CorsMiddleware'
+import { Body } from '../src/packages/param/body'
 
 @Controller('/toy')
 export class ToyController extends BaseController {
-  @Get('/list')
-  async userList(@Query('id') id: string) {
+  @Post('/list')
+  async userList(@Body() body: any) {
+    console.log(body)
+
     return {
-      success: true,
-      code: 10000,
-      id,
-      data: [
-        {
-          name: 'ainuo5213',
-          age: 18
-        },
-        {
-          name: '孙永刚',
-          age: 24
-        }
-      ]
+      ...body
+      // success: true,
+      // code: 10000,
+      // id,
+      // data: [
+      //   {
+      //     name: 'ainuo5213',
+      //     age: 18
+      //   },
+      //   {
+      //     name: '孙永刚',
+      //     age: 24
+      //   }
+      // ]
     }
   }
 }

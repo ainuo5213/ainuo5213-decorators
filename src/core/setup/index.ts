@@ -290,7 +290,7 @@ export default class Server<T extends Function> {
     info: ICollected
   ) {
     // 处理参数
-    const { parameters } = await this.handleParameter(req, info)
+    const parameters = await this.handleParameter(req, info)
 
     const context: Map<any, unknown> = await this.invokeMiddleware(
       req,
@@ -313,35 +313,30 @@ export default class Server<T extends Function> {
   private async handleParameter(
     req: http.IncomingMessage,
     info: ICollected
-  ): Promise<{
-    parameters: ResolvedParameter[]
-  }> {
+  ): Promise<ResolvedParameter[]> {
     const resultParameters: ResolvedParameter[] = []
     const parameters = info.requestHandlerParameters
 
     for (let i = 0; i < parameters.length; i++) {
       const parameter = parameters[i]
-      // if (parameter.paramFrom === 'body') {
-      //   const bodyParameterObject = await this.handleParameterFromBody(
-      //     req,
-      //     parameter,
-      //     infoValue
-      //   )
-      //   if (bodyParameterObject) {
-      //     resultParameters.push(bodyParameterObject)
-      //   }
-      // }
       const parameterResolver = this.parameterResolvers.get(parameter.paramFrom)
 
       if (parameterResolver) {
-        const parameterObject = parameterResolver.resolveParameter(
+        let parameterObject = parameterResolver.resolveParameter(
           req,
           parameter,
           info
         )
-        if (parameterObject) {
-          resultParameters.push(parameterObject)
+
+        if (parameterObject instanceof Promise) {
+          parameterObject = await parameterObject
         }
+
+        if (!parameterObject) {
+          continue
+        }
+
+        resultParameters.push(parameterObject)
       }
       //  else if (parameter.paramFrom === 'param') {
       //   const paramParameterObject = this.handleParameterFromParam(
@@ -366,9 +361,7 @@ export default class Server<T extends Function> {
 
     resultParameters.sort((a, b) => a.parameterIndex - b.parameterIndex)
 
-    return {
-      parameters: resultParameters
-    }
+    return resultParameters
   }
 
   // private handleParameterFromBody(

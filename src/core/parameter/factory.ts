@@ -2,7 +2,7 @@
  * @Author: 孙永刚 1660998482@qq.com
  * @Date: 2022-10-15 17:42:11
  * @LastEditors: 孙永刚 1660998482@qq.com
- * @LastEditTime: 2022-10-15 19:40:22
+ * @LastEditTime: 2022-10-15 20:09:14
  * @FilePath: \ainuo5213-decorators\src\core\parameter\factory.ts
  * @Description:
  *
@@ -38,6 +38,7 @@ export type ResolvedParameter = {
 }
 
 export type Nullable = undefined | null
+export type MaybePromise<T> = Promise<T> | T
 
 export abstract class AbstractParameterResolver {
   abstract parameterFrom: string
@@ -51,7 +52,7 @@ export abstract class AbstractParameterResolver {
     req: IncomingMessage,
     parameter: Parameter,
     info: ICollected
-  ): ResolvedParameter | Nullable
+  ): MaybePromise<ResolvedParameter> | Nullable
 }
 
 function addParameter(
@@ -75,10 +76,23 @@ function addParameter(
   }
 }
 
-export const generateParameterDecorator = (
+export function generateParameterDecorator(
+  metadataKey: string
+): (parameterName: string) => ParameterDecorator
+
+export function generateParameterDecorator(
   metadataKey: string,
-  parameterFrom: string = metadataKey
-) => {
-  return (parameterName: string): ParameterDecorator =>
-    addParameter(metadataKey, parameterFrom, parameterName)
+  transmitParameter: false
+): () => ParameterDecorator
+export function generateParameterDecorator(
+  metadataKey: string,
+  transmitParameter: boolean = true
+) {
+  if (transmitParameter) {
+    return (): ParameterDecorator =>
+      addParameter(metadataKey, metadataKey, metadataKey)
+  } else {
+    return (parameterName: string): ParameterDecorator =>
+      addParameter(metadataKey, metadataKey, parameterName)
+  }
 }
