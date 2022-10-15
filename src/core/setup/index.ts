@@ -52,15 +52,13 @@ export default class Server<T extends Function> {
   public async listen(port: number) {
     http
       .createServer(async (req, res) => {
-        const { pathname } = parseUrl(req.url!)
+        const { isMatched, collectedInfo } = this.isMatch(req)
 
-        for (const info of this.collected) {
-          if (this.isMatch(info, req, pathname!)) {
-            await this.handleRequest(req, res, info)
-            return
-          }
+        if (isMatched) {
+          await this.handleRequest(req, res, collectedInfo!)
+        } else {
+          return res.end('not found')
         }
-        return res.end('not found')
       })
       .listen(port)
   }
@@ -207,26 +205,90 @@ export default class Server<T extends Function> {
     return parameter
   }
 
-  private isMatch(info: ICollected, req: IncomingMessage, pathname: string) {
-    // /:id这样类型的需要后面拼接路由才能判断是否正确
-    if (pathname.includes('/:')) {
-      return this.isMatchParam(info, pathname)
+  private isMatch(req: IncomingMessage) {
+    const { pathname } = parseUrl(req.url!)
+    const matchedInfo = this.isMatchParam(pathname!)
+    if (matchedInfo.isMatched) {
+      return matchedInfo
     }
-
-    return this.collected.find(
+    const collectedInfo = this.collected.find(
       (r) =>
-        r.path.toLowerCase() === pathname.toLowerCase() &&
-        (r.requestMethod.toLowerCase() === req.method!.toLowerCase()) !== null
+        r.path.toLowerCase() === pathname!.toLowerCase() &&
+        r.requestMethod.toLowerCase() === req.method!.toLowerCase()
     )
+
+    const isMatched = !!collectedInfo === true
+
+    return {
+      isMatched: isMatched,
+      collectedInfo: isMatched ? null : collectedInfo
+    }
   }
 
-  private isMatchParam(info: ICollected, pathname: string) {
-    // 预设的含有param的路由，例如 /user/:id
-    const { path: presetPathname } = info
+  private isMatchParam(pathname: string) {
+    // pathname: /user/1
+    // 从collected找到能匹配到的最小层级的param路由
+    const realPathNameParams = pathname.split('/').filter((r) => r)
 
-    // 开始对比
-    const presetPathNameParams = presetPathname.split('/')
-    const realPathNameParams = pathname.split('/')
+    if (realPathNameParams.length === 0) {
+      return {
+        isMatched: false,
+        collectedInfo: null
+      }
+    }
+    let restCollected = [...this.collected]
+
+    let minLevelCollected: ICollected[] = [...restCollected]
+    let index = 1
+    while (restCollected.length !== 0) {
+      const _params = '/' + realPathNameParams.slice(0, index++).join('/')
+      restCollected = this.collected.filter((r) => r.path.startsWith(_params))
+      if (restCollected.length > 0) {
+        minLevelCollected = restCollected
+      }
+    }
+
+    // 最小层级的长度为0，匹配失败
+    if (minLevelCollected.length === 0) {
+      return {
+        isMatched: false,
+        collectedInfo: null
+      }
+    }
+
+    for (let i = 0; i < minLevelCollected.length; i++) {
+      const info = minLevelCollected[i]
+
+      const { path: presetPathname } = info
+
+      // 开始对比
+      const presetPathNameParams = presetPathname.split('/').filter((r) => r)
+
+      const _realPathNameParams = [...realPathNameParams]
+
+      const isMatched = this.matchParam(
+        presetPathNameParams,
+        _realPathNameParams
+      )
+
+      if (isMatched) {
+        return {
+          isMatched,
+          collectedInfo: info
+        }
+      }
+    }
+
+    return {
+      isMatched: false,
+      collectedInfo: null
+    }
+  }
+
+  private matchParam(
+    presetPathNameParams: string[],
+    realPathNameParams: string[]
+  ) {
     while (presetPathNameParams.length > 0) {
       const presetPathNameParam = presetPathNameParams.shift()
       const realPathNameParam = realPathNameParams.shift()
@@ -239,7 +301,6 @@ export default class Server<T extends Function> {
         return false
       }
     }
-
     if (presetPathNameParams.length === 0 && realPathNameParams.length === 0) {
       return true
     }
@@ -338,96 +399,10 @@ export default class Server<T extends Function> {
 
         resultParameters.push(parameterObject)
       }
-      //  else if (parameter.paramFrom === 'param') {
-      //   const paramParameterObject = this.handleParameterFromParam(
-      //     req,
-      //     parameter,
-      //     infoValue
-      //   )
-      //   // 如果返回的是boolean，则说明没有匹配到
-      //   matched = typeof paramParameterObject !== 'boolean'
-
-      //   if (!matched) {
-      //     return {
-      //       matched: false,
-      //       parameters: []
-      //     }
-      //   }
-      //   if (paramParameterObject) {
-      //     resultParameters.push(paramParameterObject as ParameterObjectType)
-      //   }
-      // }
     }
 
     resultParameters.sort((a, b) => a.parameterIndex - b.parameterIndex)
 
     return resultParameters
   }
-
-  // private handleParameterFromBody(
-  //   req: http.IncomingMessage,
-  //   parameter: Parameter,
-  //   infoValue: CollectedValueType
-  // ): Promise<ParameterObjectType> {
-  //   return new Promise((resolve, reject) => {
-  //     let postBodyString = ''
-  //     // 每次req都是个新的请求，所以不用解绑，由v8引擎自己维护
-  //     const onChunk = (chunk: any) => {
-  //       postBodyString += chunk
-  //     }
-  //     const onEnd = () => {
-  //       const parmasObject = JSON.parse(postBodyString)
-  //       resolve({
-  //         parameterIndex: parameter.index,
-  //         parameterValue: parmasObject,
-  //         paramFrom: parameter.paramFrom
-  //       })
-  //     }
-  //     const onError = (err: Error) => {
-  //       reject(err)
-  //     }
-  //     req.on('data', onChunk)
-  //     req.on('end', onEnd)
-  //     req.on('error', onError)
-  //   })
-  // }
-
-  // private handleParameterFromParam(
-  //   req: http.IncomingMessage,
-  //   parameter: Parameter,
-  //   infoValue: CollectedValueType
-  // ): ParameterObjectType | false {
-  //   // url解析得到的实际的路由，例如 /user/100
-  //   const { pathname } = parseUrl(req.url!)
-
-  //   // 预设的含有param的路由，例如 /user/:id
-  //   const { path: presetPathname } = infoValue
-
-  //   // 需要解析的预设的param key
-  //   const { injectParameterKey: paramKey } = parameter
-
-  //   // 如何检验是同一路由，这里采用path以/分割之后的个数一样且预设的paramkey和路由中注入的param key一样
-  //   const pathnameArray = pathname!.split('/').filter((r) => r)
-  //   const presetPathnameArray = presetPathname.split('/').filter((r) => r)
-  //   let matched =
-  //     pathnameArray?.length === presetPathnameArray.length &&
-  //     presetPathnameArray.includes(`:${paramKey as string}`)
-
-  //   if (!matched) {
-  //     return false
-  //   }
-
-  //   // 对照之后，进行param匹配
-  //   const presetPathnameIndex = presetPathnameArray.findIndex(
-  //     (r) => r === `:${paramKey as string}`
-  //   )
-
-  //   // 得到匹配之后的param值
-  //   const paramValue = pathnameArray[presetPathnameIndex]
-  //   return {
-  //     parameterIndex: parameter.index,
-  //     parameterValue: paramValue,
-  //     paramFrom: parameter.paramFrom
-  //   }
-  // }
 }

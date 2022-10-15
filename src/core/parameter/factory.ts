@@ -2,7 +2,7 @@
  * @Author: 孙永刚 1660998482@qq.com
  * @Date: 2022-10-15 17:42:11
  * @LastEditors: 孙永刚 1660998482@qq.com
- * @LastEditTime: 2022-10-15 20:09:14
+ * @LastEditTime: 2022-10-15 20:55:15
  * @FilePath: \ainuo5213-decorators\src\core\parameter\factory.ts
  * @Description:
  *
@@ -89,10 +89,10 @@ export function generateParameterDecorator(
   transmitParameter: boolean = true
 ) {
   if (transmitParameter) {
-    return (): ParameterDecorator =>
-      addParameter(metadataKey, metadataKey, metadataKey)
-  } else {
     return (parameterName: string): ParameterDecorator =>
       addParameter(metadataKey, metadataKey, parameterName)
+  } else {
+    return (): ParameterDecorator =>
+      addParameter(metadataKey, metadataKey, metadataKey)
   }
 }

@@ -2,7 +2,7 @@
  * @Author: 孙永刚 1660998482@qq.com
  * @Date: 2022-10-15 17:01:04
  * @LastEditors: 孙永刚 1660998482@qq.com
- * @LastEditTime: 2022-10-15 20:12:11
+ * @LastEditTime: 2022-10-15 20:22:26
  * @FilePath: \ainuo5213-decorators\sample\index.ts
  * @Description:
  *
@@ -13,6 +13,7 @@ import Server from '../src/core/setup'
 import { QueryParameterResolver } from '../src/packages/param/query'
 import IndexModule from './index.module'
 import { BodyParameterResolver } from '../src/packages/param/body'
+import { ParamParameterResolver } from '../src/packages/param/param'
 
 async function bootstrap() {
   const app = Server.create(IndexModule)
@@ -20,6 +21,7 @@ async function bootstrap() {
     .use(new QueryParameterResolver())
     .use(new HeaderParameterResolver())
     .use(new BodyParameterResolver())
+    .use(new ParamParameterResolver())
     .listen(3000)
   console.log('当前服务运行在3000')
 }
