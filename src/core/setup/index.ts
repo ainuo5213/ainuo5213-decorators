@@ -1,8 +1,8 @@
 import http from 'http'
 import { parse as parseUrl } from 'url'
 import { parse as parseQuery } from 'querystring'
-import { Parameter, ParameterFromType } from '../request/decorator'
-import { moduleFactory, ICollected } from '../request/factory'
+import { Parameter, ParameterFromType } from '../factory/decorator'
+import { moduleFactory, ICollected } from '../factory'
 import { AbsMiddleware } from '../middleware'
 
 export type ParameterObjectType = {

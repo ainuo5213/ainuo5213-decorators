@@ -15,6 +15,6 @@ export {
   Module,
   Controller,
   METADATA_KEY
-} from './core/request/decorator'
+} from './core/factory/decorator'
 
 export { default as Server, type FileParameterData } from './core/setup'
