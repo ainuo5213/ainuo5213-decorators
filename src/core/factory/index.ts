@@ -1,4 +1,5 @@
 import { BaseController } from '../controller'
+import { AsyncFunc, generateParameterResolver } from '../parameter/factory'
 import {
   Method,
   METADATA_KEY,
@@ -6,8 +7,6 @@ import {
   Parameter,
   MiddlewareType
 } from './decorator'
-
-type AsyncFunc = (...args: any[]) => Promise<any>
 
 export interface ICollected {
   path: string
@@ -123,21 +122,18 @@ const routerFactory = <T extends Function>(
       }
     })
 
+    // 解析函数参数的装饰器
+
     const queryParameterMetadatas = queryFactory(
       controllerClass,
       requestHandler
     )
-    const paramParameterMetadatas = paramFactory(
-      controllerClass,
-      requestHandler
-    )
-    const bodyParameterMetadatas = bodyFactory(controllerClass, requestHandler)
+    // const paramParameterMetadatas = paramFactory(
+    //   controllerClass,
+    //   requestHandler
+    // )
+    // const bodyParameterMetadatas = bodyFactory(controllerClass, requestHandler)
     const headerParameterMetadatas = headerFactory(
-      controllerClass,
-      requestHandler
-    )
-    const fileParameterMetadatas = fileFactory(controllerClass, requestHandler)
-    const filesParameterMetadatas = filesFactory(
       controllerClass,
       requestHandler
     )
@@ -146,11 +142,9 @@ const routerFactory = <T extends Function>(
       requestMethod,
       requestHandler,
       requestHandlerParameters: queryParameterMetadatas.concat(
-        paramParameterMetadatas,
-        bodyParameterMetadatas,
-        headerParameterMetadatas,
-        fileParameterMetadatas,
-        filesParameterMetadatas
+        // paramParameterMetadatas,
+        // bodyParameterMetadatas,
+        headerParameterMetadatas
       ),
       middlewares: resultMiddlewares,
       requestInstance: controllerClass.prototype as BaseController
@@ -160,26 +154,7 @@ const routerFactory = <T extends Function>(
   return collected
 }
 
-const parameterFactory = (metadataKey: METADATA_KEY) => {
-  return (object: Function, handler: AsyncFunc) => {
-    const objectParameterMetadatas: Parameter[] = []
-    for (let i = 0; i < handler.length; i++) {
-      const metadata = Reflect.getMetadata(
-        metadataKey,
-        object.prototype,
-        `${handler.name}.${i}`
-      ) as Parameter
-      if (metadata) {
-        objectParameterMetadatas.push(metadata)
-      }
-    }
-    return objectParameterMetadatas
-  }
-}
-
-const paramFactory = parameterFactory(METADATA_KEY.PARAM)
-const queryFactory = parameterFactory(METADATA_KEY.QUERY)
-const bodyFactory = parameterFactory(METADATA_KEY.BODY)
-const headerFactory = parameterFactory(METADATA_KEY.HEADER)
-const fileFactory = parameterFactory(METADATA_KEY.File)
-const filesFactory = parameterFactory(METADATA_KEY.Files)
+// const paramFactory = parameterFactory(METADATA_KEY.PARAM)
+const queryFactory = generateParameterResolver(METADATA_KEY.QUERY)
+// const bodyFactory = parameterFactory(METADATA_KEY.BODY)
+// const headerFactory = generateParameterResolver(METADATA_KEY.HEADER)

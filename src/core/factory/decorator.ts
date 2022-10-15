@@ -23,64 +23,7 @@ export enum METADATA_KEY {
   PATH = 'ioc:path',
   MIDDLEWARE = 'ioc:middleware',
   MODULE = 'ioc:module',
-  PARAM = 'ioc:param',
-  QUERY = 'ioc:query',
-  BODY = 'ioc:body',
-  HEADER = 'ioc:header'
-}
-
-enum REQUEST_METHOD {
-  GET = 'ioc:get',
-  POST = 'ioc:post',
-  OPTION = 'ioc:option',
-  PUT = 'ioc:put',
-  PATCH = 'ioc:patch',
-  DELETE = 'ioc:delete',
-  HEAD = 'ioc:head'
-}
-
-const methodDecoratorFactory = (method: REQUEST_METHOD) => {
-  return (path: string): MethodDecorator => {
-    return (_, _key, descriptor) => {
-      Reflect.defineMetadata(METADATA_KEY.METHOD, method, descriptor.value!)
-      Reflect.defineMetadata(METADATA_KEY.PATH, path, descriptor.value!)
-    }
-  }
-}
-
-type ParameterType = string | symbol
-
-function addParameter(
-  metadataKey: METADATA_KEY,
-  paramFrom: ParameterFromType,
-  parameterName: ParameterType
-): ParameterDecorator {
-  return (target, propKey, paramIndex) => {
-    const parameter: Parameter = {
-      index: paramIndex,
-      injectParameterKey: parameterName,
-      paramFrom: paramFrom
-    }
-
-    Reflect.defineMetadata(
-      metadataKey,
-      parameter,
-      target,
-      `${propKey as string}.${paramIndex}`
-    )
-  }
-}
-
-const parameterMoreDecoratorFactory = (metadataKey: METADATA_KEY) => {
-  const paramFrom = metadataKey.slice('ioc:'.length) as ParameterFromType
-  return (parameterName: ParameterType): ParameterDecorator =>
-    addParameter(metadataKey, paramFrom, parameterName)
-}
-
-const parameterWithoutDecoratorFactory = (metadataKey: METADATA_KEY) => {
-  const paramFrom = metadataKey.slice('ioc:'.length) as ParameterFromType
-  return (): ParameterDecorator =>
-    addParameter(metadataKey, paramFrom, BodySymbolId)
+  PARAMETER = 'ioc:parameter'
 }
 
 export const Controller = (path?: string): ClassDecorator => {
@@ -112,28 +55,11 @@ export const Module = (option: ModuleOption): ClassDecorator => {
   }
 }
 
-const BodySymbolId = Symbol('body')
-export type ParameterFromType = 'query' | 'param' | 'body' | 'header'
 export type Parameter = {
   index: number
   injectParameterKey: string | symbol
-  paramFrom: ParameterFromType
+  paramFrom: string
 }
-
-// 参数装饰器
-export const Param = parameterMoreDecoratorFactory(METADATA_KEY.PARAM)
-export const Query = parameterMoreDecoratorFactory(METADATA_KEY.QUERY)
-export const Body = parameterWithoutDecoratorFactory(METADATA_KEY.BODY)
-export const Header = parameterMoreDecoratorFactory(METADATA_KEY.HEADER)
-
-// 方法装饰器
-export const Get = methodDecoratorFactory(REQUEST_METHOD.GET)
-export const Post = methodDecoratorFactory(REQUEST_METHOD.POST)
-export const Option = methodDecoratorFactory(REQUEST_METHOD.OPTION)
-export const Put = methodDecoratorFactory(REQUEST_METHOD.PUT)
-export const Patch = methodDecoratorFactory(REQUEST_METHOD.PATCH)
-export const Delete = methodDecoratorFactory(REQUEST_METHOD.DELETE)
-export const Head = methodDecoratorFactory(REQUEST_METHOD.HEAD)
 
 function checkTypeError(
   middlewares: MiddlewareType[],
@@ -147,6 +73,7 @@ function checkTypeError(
 
   return typeErrorLength > 1
 }
+
 function getMiddlewares(middlewares: MiddlewareType[] | MiddlewareType) {
   let _middlewares
   if (!Array.isArray(middlewares)) {
@@ -156,6 +83,7 @@ function getMiddlewares(middlewares: MiddlewareType[] | MiddlewareType) {
   }
   return _middlewares
 }
+
 export function InjectClassMiddleware(
   middlewares: MiddlewareType[] | MiddlewareType
 ): ClassDecorator {
