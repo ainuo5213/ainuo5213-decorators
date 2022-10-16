@@ -1,19 +1,11 @@
 import http, { IncomingMessage } from 'http'
 import { parse as parseUrl } from 'url'
-import {
-  METADATA_KEY,
-  MiddlewareType,
-  ModuleOption,
-  Parameter
-} from '../factory/decorator'
-import { ICollected } from '../factory'
-import { AbsMiddleware } from '../middleware'
-import {
-  AbstractParameterResolver,
-  AsyncFunc,
-  ResolvedParameter
-} from '../parameter/factory'
-import { BaseController } from '../controller'
+import { ICollected } from '../collected'
+import { AbstractParameterResolver, ResolvedParameter } from '../parameter'
+import { BaseModuleResolver } from '../module'
+import { AbstractMiddleware } from '../middleware'
+import { MaybeNull } from '../module'
+import { BaseControllerResolver } from '../controller'
 
 export type ParameterObjectType = {
   parameterValue: any
@@ -26,26 +18,87 @@ export type CollectedValueType = Pick<
   'path' | 'requestHandler' | 'requestMethod'
 >
 
-export default class Server<T extends Function> {
+enum Urgency {
+  LowestPriority = 0,
+  General = 1,
+  Preference = 2
+}
+
+type UseFunction = {
+  invoke: () => void
+  urgency: Urgency
+}
+
+export default class Server<T extends Function = Function> {
   private collected: ICollected[] = []
   private static instance: Server<Function>
-  private parameterResolvers: Map<string, AbstractParameterResolver> = new Map()
+  private moduleResolver: MaybeNull<BaseModuleResolver> = null
+  private controllerResolver: MaybeNull<BaseControllerResolver> = null
+  private useFunctionStack: UseFunction[] = []
   private constructor(module: T) {
     if (!module) {
-      throw new TypeError('injectModule is nullable')
+      throw new TypeError('injected module is nullable')
     }
     setTimeout(() => {
-      this.collected = this.resolveModule(module)
+      this.collected = this.resolve(module)
     })
   }
 
-  public use(parameterResolver: AbstractParameterResolver) {
-    if (!this.parameterResolvers.has(parameterResolver.parameterFrom)) {
-      this.parameterResolvers.set(
-        parameterResolver.parameterFrom,
-        parameterResolver
-      )
+  public useModuleResolver(
+    moduleResolver: MaybeNull<BaseModuleResolver> = null
+  ) {
+    const fn = () => {
+      if (!moduleResolver) {
+        moduleResolver = new BaseModuleResolver()
+      }
+      this.moduleResolver = moduleResolver
     }
+    this.useFunctionStack.push({
+      urgency: Urgency.Preference,
+      invoke: fn
+    })
+
+    return this
+  }
+
+  public useControllerResolver(
+    controllerResolver: MaybeNull<BaseControllerResolver> = null
+  ) {
+    const fn = () => {
+      if (!this.moduleResolver) {
+        throw new TypeError('injected module is nullable')
+      }
+      if (!controllerResolver) {
+        controllerResolver = new BaseControllerResolver()
+      }
+      this.controllerResolver = controllerResolver
+      this.moduleResolver.useControllerResolver(controllerResolver)
+    }
+    this.useFunctionStack.push({
+      urgency: Urgency.General,
+      invoke: fn
+    })
+
+    return this
+  }
+
+  public useParameterResolver(parameterResolver: AbstractParameterResolver) {
+    const fn = () => {
+      if (!this.moduleResolver) {
+        throw new Error('module resolver is not defined')
+      }
+      const controllerResolver = this.moduleResolver.getControllerResolver()
+      if (!controllerResolver) {
+        throw new Error('controller resolver is not defined')
+      }
+      controllerResolver.useParameterResolvers(parameterResolver)
+    }
+
+    this.useFunctionStack.push({
+      urgency: Urgency.LowestPriority,
+      invoke: fn
+    })
+
     return this
   }
 
@@ -70,144 +123,30 @@ export default class Server<T extends Function> {
     return Server.instance
   }
 
-  private resolveModule(module: Function, middlewares: MiddlewareType[] = []) {
-    const prototype = module.prototype
-
-    const moduleOption = Reflect.getMetadata(
-      METADATA_KEY.MODULE,
-      prototype.constructor
-    ) as ModuleOption | undefined
-    const collectedData: ICollected[] = []
-    if (!moduleOption) {
-      return collectedData
+  private resolve(module: Function) {
+    if (!this.moduleResolver) {
+      this.useModuleResolver()
+    }
+    if (!this.controllerResolver) {
+      this.useControllerResolver()
     }
 
-    let moduleMiddlewares: MiddlewareType[] = []
-
-    if (moduleOption?.middleware?.length) {
-      moduleMiddlewares = middlewares.concat(moduleOption.middleware)
-    }
-
-    moduleMiddlewares = moduleMiddlewares.concat(
-      (Reflect.getMetadata(METADATA_KEY.MIDDLEWARE, prototype.constructor) as
-        | MiddlewareType[]
-        | undefined) || []
+    // 开始执行优先级高的任务
+    const sortedInvokeStack = [...this.useFunctionStack].sort(
+      (a, b) => b.urgency - a.urgency
     )
 
-    if (moduleOption?.controllers?.length) {
-      moduleOption.controllers.forEach((r) => {
-        collectedData.push(...this.resolveController(r, moduleMiddlewares))
-      })
-    }
-    if (moduleOption?.modules?.length) {
-      moduleOption.modules.forEach((r) => {
-        collectedData.push(...this.resolveModule(r, moduleMiddlewares))
-      })
-    }
-
-    // 验重
-    const mappedCollection = collectedData.map((r) => r.path + r.requestMethod)
-    const beforeLength = mappedCollection.length
-    const afterLength = new Set(mappedCollection).size
-    if (beforeLength !== afterLength) {
-      throw new Error('含有重复的路由')
-    }
-    return collectedData
-  }
-
-  private resolveController(
-    controllerClass: Function,
-    middlewares: MiddlewareType[] = []
-  ) {
-    const prototype = controllerClass.prototype
-
-    // 获取构造函数的path元数据
-    const rootPath = Reflect.getMetadata(
-      METADATA_KEY.PATH,
-      prototype.constructor
-    ) as string
-
-    const controllerMiddleware =
-      (Reflect.getMetadata(METADATA_KEY.MIDDLEWARE, prototype.constructor) as
-        | MiddlewareType[]
-        | undefined) || []
-
-    // 获取非构造函数的方法
-    const methods = Reflect.ownKeys(prototype).filter(
-      (item) => item !== 'constructor'
-    ) as string[]
-
-    const collected: ICollected[] = []
-
-    for (let i = 0; i < methods.length; i++) {
-      const methodKey = methods[i]
-      const requestHandler = prototype[methodKey]
-
-      // 获取方法的path元数据
-      const path = Reflect.getMetadata(METADATA_KEY.PATH, requestHandler) as
-        | string
-        | undefined
-
-      // 获取方法上请求方法的元数据
-      const requestMethod = Reflect.getMetadata(
-        METADATA_KEY.METHOD,
-        requestHandler
-      ) as string | undefined
-
-      if (!path || !requestMethod) {
-        continue
-      }
-
-      const routeMiddleware =
-        (Reflect.getMetadata(
-          METADATA_KEY.MIDDLEWARE,
-          requestHandler,
-          methodKey
-        ) as MiddlewareType[] | undefined) || []
-      const tmpResultMiddlewares = middlewares.concat(
-        controllerMiddleware,
-        routeMiddleware
-      )
-
-      // 去除重复注册的中间件
-      const resultMiddlewares: MiddlewareType[] = []
-      const resultMiddlewareNames: string[] = []
-      tmpResultMiddlewares.forEach((middleware) => {
-        if (!resultMiddlewareNames.includes(middleware.name)) {
-          resultMiddlewareNames.push(middleware.name)
-          resultMiddlewares.push(middleware)
-        }
-      })
-
-      // 解析函数参数的装饰器
-      const parameters = this.resolveParameters(controllerClass, requestHandler)
-
-      collected.push({
-        path: `${rootPath}${path}`,
-        requestMethod,
-        requestHandler,
-        requestHandlerParameters: parameters,
-        middlewares: resultMiddlewares,
-        requestInstance: controllerClass.prototype as BaseController
-      } as ICollected)
-    }
-
-    return collected
-  }
-
-  private resolveParameters(controller: Function, requestHandler: AsyncFunc) {
-    let parameter: Parameter[] = []
-    this.parameterResolvers.forEach((r) => {
-      const _parameters = r.getInjectParameters(controller, requestHandler)
-      parameter = parameter.concat(_parameters)
+    sortedInvokeStack.forEach((r) => {
+      r.invoke()
     })
 
-    return parameter
+    return this.moduleResolver!.resolve(module)
   }
 
   private isMatch(req: IncomingMessage) {
     const { pathname } = parseUrl(req.url!)
     const matchedInfo = this.isMatchParam(pathname!)
+
     if (matchedInfo.isMatched) {
       return matchedInfo
     }
@@ -321,7 +260,7 @@ export default class Server<T extends Function> {
           const middlewareInstance = Reflect.construct(
             middleware as Function,
             []
-          ) as AbsMiddleware
+          ) as AbstractMiddleware
 
           try {
             const result = await Promise.resolve(
@@ -351,7 +290,7 @@ export default class Server<T extends Function> {
     info: ICollected
   ) {
     // 处理参数
-    const parameters = await this.handleParameter(req, info)
+    const parameters = await this.getInjectedParameter(req, info)
 
     const context: Map<any, unknown> = await this.invokeMiddleware(
       req,
@@ -371,7 +310,7 @@ export default class Server<T extends Function> {
       })
   }
 
-  private async handleParameter(
+  private async getInjectedParameter(
     req: http.IncomingMessage,
     info: ICollected
   ): Promise<ResolvedParameter[]> {
@@ -380,7 +319,9 @@ export default class Server<T extends Function> {
 
     for (let i = 0; i < parameters.length; i++) {
       const parameter = parameters[i]
-      const parameterResolver = this.parameterResolvers.get(parameter.paramFrom)
+      const parameterResolver = this.controllerResolver!.get(
+        parameter.paramFrom
+      )
 
       if (parameterResolver) {
         let parameterObject = parameterResolver.resolveParameter(

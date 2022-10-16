@@ -2,17 +2,22 @@
  * @Author: 孙永刚 1660998482@qq.com
  * @Date: 2022-10-15 17:42:11
  * @LastEditors: 孙永刚 1660998482@qq.com
- * @LastEditTime: 2022-10-15 20:55:15
- * @FilePath: \ainuo5213-decorators\src\core\parameter\factory.ts
+ * @LastEditTime: 2022-10-16 11:02:56
+ * @FilePath: \ainuo5213-decorators\src\core\parameter\index.ts
  * @Description:
  *
  * Copyright (c) 2022 by 孙永刚 1660998482@qq.com, All Rights Reserved.
  */
-import { Parameter } from '../factory/decorator'
 import { IncomingMessage } from 'http'
-import { ICollected } from '../factory'
+import { ICollected } from '../collected'
+import 'reflect-metadata'
 
 export type AsyncFunc = (...args: any[]) => Promise<any>
+export type Parameter = {
+  index: number
+  injectParameterKey: string | symbol
+  paramFrom: string
+}
 
 export const generateParameterResolver = (metadataKey: string) => {
   return (object: Function, handler: AsyncFunc) => {

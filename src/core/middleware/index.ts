@@ -1,8 +1,19 @@
+/*
+ * @Author: 孙永刚 1660998482@qq.com
+ * @Date: 2022-10-15 17:01:04
+ * @LastEditors: 孙永刚 1660998482@qq.com
+ * @LastEditTime: 2022-10-16 09:47:19
+ * @FilePath: \ainuo5213-decorators\src\core\middleware\index.ts
+ * @Description:
+ *
+ * Copyright (c) 2022 by 孙永刚 1660998482@qq.com, All Rights Reserved.
+ */
 import { IncomingMessage, ServerResponse } from 'http'
 
-type MiddlewareType = 'controller' | 'module' | 'route'
-export abstract class AbsMiddleware {
-  abstract readonly __flag: MiddlewareType
+export type MiddlewareFlagType = 'controller' | 'module' | 'route'
+
+export abstract class AbstractMiddleware {
+  abstract readonly __flag: MiddlewareFlagType
   private __key: any
   private __context: unknown
   abstract use(
@@ -24,14 +35,16 @@ export abstract class AbsMiddleware {
   }
 }
 
-export abstract class ModuleMiddlware extends AbsMiddleware {
-  readonly __flag: MiddlewareType = 'module'
+export type MiddlewareType = typeof AbstractMiddleware
+
+export abstract class ModuleMiddlware extends AbstractMiddleware {
+  readonly __flag: MiddlewareFlagType = 'module'
 }
 
-export abstract class ControllerMiddlware extends AbsMiddleware {
-  readonly __flag: MiddlewareType = 'controller'
+export abstract class ControllerMiddlware extends AbstractMiddleware {
+  readonly __flag: MiddlewareFlagType = 'controller'
 }
 
-export abstract class RouteMiddlware extends AbsMiddleware {
-  readonly __flag: MiddlewareType = 'route'
+export abstract class RouteMiddlware extends AbstractMiddleware {
+  readonly __flag: MiddlewareFlagType = 'route'
 }

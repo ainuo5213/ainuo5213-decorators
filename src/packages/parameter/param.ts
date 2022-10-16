@@ -1,23 +1,23 @@
-import { Nullable } from './../../core/parameter/factory'
 /*
  * @Author: 孙永刚 1660998482@qq.com
  * @Date: 2022-10-15 17:10:52
  * @LastEditors: 孙永刚 1660998482@qq.com
- * @LastEditTime: 2022-10-15 20:56:22
- * @FilePath: \ainuo5213-decorators\src\packages\param\param.ts
+ * @LastEditTime: 2022-10-16 10:24:10
+ * @FilePath: \ainuo5213-decorators\src\packages\parameter\param.ts
  * @Description:
  *
  * Copyright (c) 2022 by 孙永刚 1660998482@qq.com, All Rights Reserved.
  */
-import { generateParameterDecorator } from '../../core/parameter/factory'
+import { IncomingMessage } from 'http'
+import { parse as parseUrl } from 'url'
+import { ICollected } from '../../core/collected'
 import {
   AbstractParameterResolver,
+  generateParameterDecorator,
+  Nullable,
+  Parameter,
   ResolvedParameter
-} from '../../core/parameter/factory'
-import { IncomingMessage } from 'http'
-import { Parameter } from '../../core/factory/decorator'
-import { ICollected } from '../../core/factory'
-import { parse as parseUrl } from 'url'
+} from '../../core/parameter'
 
 export const Param = generateParameterDecorator('param')
 

@@ -8,6 +8,6 @@
  *
  * Copyright (c) 2022 by 孙永刚 1660998482@qq.com, All Rights Reserved.
  */
-import { generateRouteDecorator } from './../../core/route/factory'
+import { generateRouteDecorator } from './../../core/route'
 
 export const Delete = generateRouteDecorator('delete')

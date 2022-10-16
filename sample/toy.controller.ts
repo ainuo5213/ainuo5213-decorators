@@ -2,28 +2,20 @@
  * @Author: 孙永刚 1660998482@qq.com
  * @Date: 2022-10-15 17:01:04
  * @LastEditors: 孙永刚 1660998482@qq.com
- * @LastEditTime: 2022-10-15 20:56:45
+ * @LastEditTime: 2022-10-16 11:02:02
  * @FilePath: \ainuo5213-decorators\sample\toy.controller.ts
  * @Description:
  *
  * Copyright (c) 2022 by 孙永刚 1660998482@qq.com, All Rights Reserved.
  */
 import { BaseController } from '../src/core/controller'
-import {
-  Controller,
-  InjectClassMiddleware,
-  InjectMethodMiddleware
-} from '../src/core/factory/decorator'
-import { Post } from '../src/packages/route/post'
-import { Query } from '../src/packages/param/query'
-
-import { ControllerCorsMiddleware, RouteCorsMiddleware } from './CorsMiddleware'
-import { Body } from '../src/packages/param/body'
-import { Param } from '../src/packages/param/param'
+import { Controller } from '../src/packages/controller/controller'
+import { Param } from '../src/packages/parameter/param'
+import { Get } from '../src/packages/route/get'
 
 @Controller('/toy')
 export class ToyController extends BaseController {
-  @Post('/list/:id/:male')
+  @Get('/list/:id/:male')
   async userList(@Param('id') id: any, @Param('male') male: any) {
     return {
       id,

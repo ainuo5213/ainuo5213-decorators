@@ -1,3 +1,3 @@
-import { generateRouteDecorator } from './../../core/route/factory'
+import { generateRouteDecorator } from './../../core/route'
 
 export const Post = generateRouteDecorator('post')
