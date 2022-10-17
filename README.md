@@ -4,8 +4,10 @@
 
 目前待实现功能：
 
-错误处理（errorCaptureFilter）、登录校验（AuthorizeFilter）、统一返回处理（ActionResultFilter）、依赖注入（dependency-injection）
+错误处理（ErrorCaptureHandler）：捕获程序运行的错误进行处理
 
-core 提供抽象层、并暂留入口
+身份认证校验（AuthorizeFilter）：在访问接口之前做的关于身份认证的过滤
 
-packages 提供实现层，用于植入特定的逻辑
+依赖注入（dependency-injection）：注入、解析依赖的 service
+
+BaseController 原生的关于 statusCode 的方法
