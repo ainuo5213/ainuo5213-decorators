@@ -20,7 +20,7 @@ export type InjectOption = {
 export const Inject = (
   option: InjectOption = {
     lifecycle: Lifecycle.transiant,
-    injectType: InjectType.property
+    injectType: InjectType.constructor
   }
 ): ClassDecorator => {
   return (target) => {
