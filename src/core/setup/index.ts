@@ -238,6 +238,11 @@ export default class Server<T extends Function = Function> {
       // 预设的parameter以':'开头，则判断realPathNameParam有无，没有表示不匹配
       if (presetPathNameParam.startsWith(':') && !realPathNameParam) {
         return false
+      } else if (!presetPathNameParam.startsWith(':')) {
+        // 预设的parameter没有以':'开头，则判断realPathNameParam和presetPathNameParam是否相等
+        if (presetPathNameParam !== realPathNameParam) {
+          return false
+        }
       }
     }
     if (presetPathNameParams.length === 0 && realPathNameParams.length === 0) {

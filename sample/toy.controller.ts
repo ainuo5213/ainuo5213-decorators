@@ -15,11 +15,10 @@ import { Get } from '../src/packages/route/get'
 
 @Controller('/toy')
 export class ToyController extends BaseController {
-  @Get('/list/:id/:male')
-  async userList(@Param('id') id: any, @Param('male') male: any) {
+  @Get('/list/:id?male')
+  async userList(@Param('id') id: any) {
     return {
-      id,
-      male
+      id
       // success: true,
       // code: 10000,
       // id,
