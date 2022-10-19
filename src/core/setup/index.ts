@@ -154,24 +154,12 @@ export default class Server<T extends Function = Function> {
         req.method!.toLowerCase()
     ) {
       return matchedInfo
-    } else if (matchedInfo.isMatched) {
+    } else {
       // 如果请求方法不一样，但是匹配到了说明请求方法不一样，表示匹配失败
       return {
         isMatched: false,
         collectedInfo: null
       }
-    }
-    const collectedInfo = this.collected.find(
-      (r) =>
-        r.path.toLowerCase() === pathname!.toLowerCase() &&
-        r.requestMethod.toLowerCase() === req.method!.toLowerCase()
-    )
-
-    const isMatched = !!collectedInfo === true
-
-    return {
-      isMatched: isMatched,
-      collectedInfo: isMatched ? null : collectedInfo
     }
   }
 
