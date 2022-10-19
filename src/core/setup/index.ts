@@ -147,8 +147,19 @@ export default class Server<T extends Function = Function> {
     const { pathname } = parseUrl(req.url!)
     const matchedInfo = this.isMatchParam(pathname!)
 
-    if (matchedInfo.isMatched) {
+    // 如果路由匹配到了，并且collectedInfo的请求方法和req的请求方法一样，则表示匹配通过
+    if (
+      matchedInfo.isMatched &&
+      matchedInfo.collectedInfo!.requestMethod.toLowerCase() ===
+        req.method!.toLowerCase()
+    ) {
       return matchedInfo
+    } else if (matchedInfo.isMatched) {
+      // 如果请求方法不一样，但是匹配到了说明请求方法不一样，表示匹配失败
+      return {
+        isMatched: false,
+        collectedInfo: null
+      }
     }
     const collectedInfo = this.collected.find(
       (r) =>
@@ -229,8 +240,8 @@ export default class Server<T extends Function = Function> {
     realPathNameParams: string[]
   ) {
     while (presetPathNameParams.length > 0) {
-      const presetPathNameParam = presetPathNameParams.shift()
-      const realPathNameParam = realPathNameParams.shift()
+      const presetPathNameParam = presetPathNameParams.shift()?.toLowerCase()
+      const realPathNameParam = realPathNameParams.shift()?.toLowerCase()
 
       if (!presetPathNameParam) {
         return realPathNameParams.length === 0
