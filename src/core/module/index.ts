@@ -1,8 +1,10 @@
 import 'reflect-metadata'
 import { ModuleOption } from './../../packages/module/index'
 import { ICollected } from '../collected'
-import { BaseControllerResolver } from '../controller'
+import { BaseController, BaseControllerResolver } from '../controller'
 import { MiddlewareType } from '../middleware'
+import { InjectOption } from '../dependency-injection/types'
+import { ClassStruct } from '../types'
 
 export class AppModule {}
 
@@ -24,6 +26,7 @@ export class BaseModuleResolver {
     if (!this.controllerResolver) {
       throw new Error('controller resolver is not defined')
     }
+
     return this.controllerResolver.resolve(controllerClass, middlewares)
   }
   resolve(module: Function, middlewares: MiddlewareType[] = []): ICollected[] {

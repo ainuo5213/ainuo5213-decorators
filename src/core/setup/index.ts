@@ -6,6 +6,12 @@ import { BaseModuleResolver } from '../module'
 import { AbstractMiddleware } from '../middleware'
 import { MaybeNull } from '../module'
 import { BaseControllerResolver } from '../controller'
+import {
+  AbstractContainer,
+  AbstractContainerBuilder,
+  AbstractServiceProviderFactory
+} from '../dependency-injection/types'
+import { ClassStruct } from '../types'
 
 export type ParameterObjectType = {
   parameterValue: any
@@ -35,12 +41,17 @@ export default class Server<T extends Function = Function> {
   private moduleResolver: MaybeNull<BaseModuleResolver> = null
   private controllerResolver: MaybeNull<BaseControllerResolver> = null
   private useFunctionStack: UseFunction[] = []
+  private serviceProviderFactory: MaybeNull<AbstractServiceProviderFactory> =
+    null
+  private container: AbstractContainer
   private constructor(module: T) {
     if (!module) {
       throw new TypeError('injected module is nullable')
     }
     setTimeout(() => {
       this.collected = this.resolve(module)
+      this.collectDependency(this.collected)
+      this.container = this.serviceProviderFactory!.getBuilder().build()
     })
   }
 
@@ -76,6 +87,20 @@ export default class Server<T extends Function = Function> {
     }
     this.useFunctionStack.push({
       urgency: Urgency.General,
+      invoke: fn
+    })
+
+    return this
+  }
+
+  public useServiceProviderFactory(
+    serviceProviderFactory: AbstractServiceProviderFactory
+  ) {
+    const fn = () => {
+      this.serviceProviderFactory = serviceProviderFactory
+    }
+    this.useFunctionStack.push({
+      urgency: Urgency.LowestPriority,
       invoke: fn
     })
 
@@ -121,6 +146,23 @@ export default class Server<T extends Function = Function> {
       Server.instance = new Server(module)
     }
     return Server.instance
+  }
+
+  private collectDependency(collected: ICollected[]) {
+    const builder = this.serviceProviderFactory!.getBuilder()
+    for (let i = 0; i < collected.length; i++) {
+      const collectedItem = collected[i]
+      this.regsiterDependencies(builder, collectedItem)
+    }
+  }
+
+  private regsiterDependencies(
+    builder: AbstractContainerBuilder,
+    collectedItem: ICollected
+  ) {
+    collectedItem.dependencies.forEach((r) => {
+      builder.register(r.constructor.name, r)
+    })
   }
 
   private resolve(module: Function) {
@@ -301,9 +343,18 @@ export default class Server<T extends Function = Function> {
       res,
       info
     )
-    info.requestInstance.context = context
+
+    const params: ClassStruct[] = []
+    info.dependencies.forEach((dep) => {
+      const depInstance = this.container.resolve<ClassStruct>(
+        dep.constructor.name
+      )
+      params.push(depInstance)
+    })
+
+    const instance = new info.requestController(...params)
     info.requestHandler
-      .bind(info.requestInstance)(
+      .bind(instance)(
         ...parameters.map((r) => {
           return r.parameterValue
         })

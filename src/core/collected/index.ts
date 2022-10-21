@@ -9,6 +9,7 @@
  * Copyright (c) 2022 by 孙永刚 1660998482@qq.com, All Rights Reserved.
  */
 import { BaseController } from '../controller'
+import { ServiceValue } from '../dependency-injection/types'
 import { MiddlewareType } from '../middleware'
 import { AsyncFunc, Parameter } from '../parameter'
 
@@ -18,5 +19,6 @@ export interface ICollected {
   requestHandler: AsyncFunc
   requestHandlerParameters: Parameter[]
   middlewares: MiddlewareType[]
-  requestInstance: BaseController
+  requestController: typeof BaseController
+  dependencies: Map<string, ServiceValue>
 }

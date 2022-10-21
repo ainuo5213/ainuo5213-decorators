@@ -8,6 +8,7 @@
  *
  * Copyright (c) 2022 by 孙永刚 1660998482@qq.com, All Rights Reserved.
  */
+import { ServiceProviderFactory } from '../src/core/dependency-injection/service-provider-factory'
 import Server from '../src/core/setup'
 import { BodyParameterResolver } from '../src/packages/parameter/body'
 import { HeaderParameterResolver } from '../src/packages/parameter/header'
@@ -18,6 +19,7 @@ import IndexModule from './index.module'
 async function bootstrap() {
   const app = Server.create(IndexModule)
   await app
+    .useServiceProviderFactory(new ServiceProviderFactory())
     .useParameterResolver(new QueryParameterResolver())
     .useParameterResolver(new HeaderParameterResolver())
     .useParameterResolver(new BodyParameterResolver())
@@ -26,3 +28,22 @@ async function bootstrap() {
   console.log('当前服务运行在3000')
 }
 bootstrap()
+// import { Lifecycle } from '../src/core/dependency-injection'
+// import { ContainerBuilder } from '../src/packages/dependency-injection/container-builder'
+// import { ToyService } from './toy.service'
+
+// const app = Server.create(IndexModule)
+// const builder = new ContainerBuilder()
+
+// builder.register({
+//   option: {
+//     lifecycle: Lifecycle.singleton
+//   },
+//   constructor: ToyService
+// })
+
+// const container = builder.build()
+
+// const instance = container.resolve(ToyService)
+
+// console.log(instance)

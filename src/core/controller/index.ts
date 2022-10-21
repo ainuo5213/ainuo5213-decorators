@@ -1,7 +1,9 @@
 import 'reflect-metadata'
 import { ICollected } from '../collected'
+import { ServiceKey, ServiceValue } from '../dependency-injection/types'
 import { MiddlewareType } from '../middleware'
 import { AbstractParameterResolver, AsyncFunc, Parameter } from '../parameter'
+import { ClassStruct } from '../types'
 
 /*
  * @Author: 孙永刚 1660998482@qq.com
@@ -15,6 +17,7 @@ import { AbstractParameterResolver, AsyncFunc, Parameter } from '../parameter'
  */
 export class BaseController {
   private static context: any
+  constructor(...args: any[]) {}
   get context() {
     return BaseController.context
   }
@@ -71,6 +74,10 @@ export class BaseControllerResolver {
         | MiddlewareType[]
         | undefined) || []
 
+    // 读取构造函数的参数
+    const ctorParams = Reflect.getMetadata('design:paramtypes', controller)
+    const dependencies = this.resolveDependencies(ctorParams)
+
     // 获取非构造函数的方法
     const methods = Reflect.ownKeys(prototype).filter(
       (item) => item !== 'constructor'
@@ -117,17 +124,41 @@ export class BaseControllerResolver {
 
       // 解析函数参数的装饰器
       const parameters = this.resolveParameters(controller, requestHandler)
-
       collected.push({
         path: `${rootPath}${path}`,
         requestMethod,
         requestHandler,
         requestHandlerParameters: parameters,
         middlewares: resultMiddlewares,
-        requestInstance: controller.prototype as BaseController
+        requestController: controller,
+        dependencies: dependencies
       } as ICollected)
     }
 
     return collected
+  }
+
+  resolveDependencies(params: ClassStruct[]) {
+    const dependencies: Map<string, ServiceValue> = new Map()
+    params.forEach((param) => {
+      const dependencyValue = Reflect.getMetadata(
+        'dependency-injection',
+        param
+      ) as ServiceValue | undefined
+      if (!dependencyValue) {
+        throw new Error(`${param.name}'s dependency is not injected`)
+      }
+
+      const ctorParams = Reflect.getMetadata('design:paramtypes', param) as
+        | ClassStruct[]
+        | undefined
+      if (ctorParams && ctorParams.length > 0) {
+        dependencyValue.dependencies = this.resolveDependencies(ctorParams)
+      } else {
+        dependencyValue.dependencies = new Map()
+      }
+      dependencies.set(dependencyValue.constructor.name, dependencyValue)
+    })
+    return dependencies
   }
 }

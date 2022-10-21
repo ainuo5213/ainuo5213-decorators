@@ -12,13 +12,21 @@ import { BaseController } from '../src/core/controller'
 import { Controller } from '../src/packages/controller/controller'
 import { Param } from '../src/packages/parameter/param'
 import { Get } from '../src/packages/route/get'
+import { ToyService } from './toy.service'
 
 @Controller('/toy')
 export class ToyController extends BaseController {
-  @Get('/list/:id?male')
+  constructor(private toyService: ToyService) {
+    super()
+  }
+  @Get('/list/:id')
   async userList(@Param('id') id: any) {
+    const result = this.toyService.getObj()
+
+    // console.log(this.toyService!.getObj())
     return {
-      id
+      id,
+      result
       // success: true,
       // code: 10000,
       // id,
