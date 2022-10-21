@@ -5,7 +5,7 @@ import { AbstractParameterResolver, ResolvedParameter } from '../parameter'
 import { BaseModuleResolver } from '../module'
 import { AbstractMiddleware } from '../middleware'
 import { MaybeNull } from '../module'
-import { BaseControllerResolver } from '../controller'
+import { BaseController, BaseControllerResolver } from '../controller'
 import {
   AbstractContainer,
   AbstractContainerBuilder,
@@ -352,7 +352,8 @@ export default class Server<T extends Function = Function> {
       params.push(depInstance)
     })
 
-    const instance = new info.requestController(...params)
+    const instance: BaseController = new info.requestController(...params)
+    instance.context = context
     info.requestHandler
       .bind(instance)(
         ...parameters.map((r) => {
@@ -361,6 +362,8 @@ export default class Server<T extends Function = Function> {
       )
       .then(async (data) => {
         res.writeHead(200, { 'Content-Type': 'application/json' })
+        // 释放scoped生命周期的实例
+        this.container.dispose()
         res.end(JSON.stringify(data))
       })
   }
