@@ -2,7 +2,7 @@
  * @Author: 孙永刚 1660998482@qq.com
  * @Date: 2022-10-15 17:10:48
  * @LastEditors: 孙永刚 1660998482@qq.com
- * @LastEditTime: 2022-10-22 09:35:20
+ * @LastEditTime: 2022-10-22 21:15:20
  * @FilePath: \ainuo5213-decorators\src\packages\parameter\query.ts
  * @Description: Query装饰器
  *
@@ -18,7 +18,7 @@ import {
   Parameter,
   ResolvedParameter
 } from '../../core/parameter'
-import { ICollected } from '../../core/collected'
+import { ICollected } from '../../core/types'
 
 export const Query = generateParameterDecorator('query')
 export const ModelQuery = generateParameterDecorator('modelQuery', false)
