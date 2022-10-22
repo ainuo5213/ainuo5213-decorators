@@ -1,9 +1,18 @@
+/*
+ * @Author: 孙永刚 1660998482@qq.com
+ * @Date: 2022-10-22 07:19:13
+ * @LastEditors: 孙永刚 1660998482@qq.com
+ * @LastEditTime: 2022-10-22 07:55:25
+ * @FilePath: \ainuo5213-decorators\src\core\dependency-injection\inject.ts
+ * @Description:
+ *
+ * Copyright (c) 2022 by 孙永刚 1660998482@qq.com, All Rights Reserved.
+ */
 import 'reflect-metadata'
-import { InjectOption, InjectType, Lifecycle } from './types'
+import { InjectOption, Lifecycle } from './types'
 export const Inject = (
   option: InjectOption = {
-    lifecycle: Lifecycle.transiant,
-    injectType: InjectType.constructor
+    lifecycle: Lifecycle.transiant
   }
 ): ClassDecorator => {
   return (target) => {

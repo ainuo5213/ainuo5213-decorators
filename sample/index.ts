@@ -2,7 +2,7 @@
  * @Author: 孙永刚 1660998482@qq.com
  * @Date: 2022-10-15 17:01:04
  * @LastEditors: 孙永刚 1660998482@qq.com
- * @LastEditTime: 2022-10-16 10:27:54
+ * @LastEditTime: 2022-10-22 07:49:27
  * @FilePath: \ainuo5213-decorators\sample\index.ts
  * @Description:
  *
@@ -28,22 +28,3 @@ async function bootstrap() {
   console.log('当前服务运行在3000')
 }
 bootstrap()
-// import { Lifecycle } from '../src/core/dependency-injection'
-// import { ContainerBuilder } from '../src/packages/dependency-injection/container-builder'
-// import { ToyService } from './toy.service'
-
-// const app = Server.create(IndexModule)
-// const builder = new ContainerBuilder()
-
-// builder.register({
-//   option: {
-//     lifecycle: Lifecycle.singleton
-//   },
-//   constructor: ToyService
-// })
-
-// const container = builder.build()
-
-// const instance = container.resolve(ToyService)
-
-// console.log(instance)

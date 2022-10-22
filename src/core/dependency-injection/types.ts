@@ -26,15 +26,8 @@ export enum Lifecycle {
   singleton = 'singleton'
 }
 
-export enum InjectType {
-  property = 'property',
-  constructor = 'constructor',
-  method = 'method'
-}
-
 export type InjectOption = {
   lifecycle?: Lifecycle
-  injectType?: InjectType
 }
 
 export type ServiceKey<T = any> = string | ClassStruct<T> | Function
@@ -45,6 +38,6 @@ export type ServiceValue<T = any> = {
 }
 
 export abstract class AbstractServiceProviderFactory {
-  public readonly __flag = 'dependency-injection'
+  public static readonly __flag = 'dependency-injection'
   abstract getBuilder(): AbstractContainerBuilder
 }

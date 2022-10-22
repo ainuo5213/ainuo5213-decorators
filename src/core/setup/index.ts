@@ -344,15 +344,7 @@ export default class Server<T extends Function = Function> {
       info
     )
 
-    const params: ClassStruct[] = []
-    info.dependencies.forEach((dep) => {
-      const depInstance = this.container.resolve<ClassStruct>(
-        dep.constructor.name
-      )
-      params.push(depInstance)
-    })
-
-    const instance: BaseController = new info.requestController(...params)
+    const instance = this.getControllerInstance(info)
     instance.context = context
     info.requestHandler
       .bind(instance)(
@@ -366,6 +358,23 @@ export default class Server<T extends Function = Function> {
         this.container.dispose()
         res.end(JSON.stringify(data))
       })
+  }
+
+  private getControllerInstance(info: ICollected) {
+    const params: ClassStruct[] = []
+    // 对于构造函数注入的需要提前初始化其依赖
+    info.dependencies.forEach((dep) => {
+      const depInstance = this.container.resolve<ClassStruct>(
+        dep.constructor.name
+      )
+      params.push(depInstance)
+    })
+
+    const instance: BaseController = Reflect.construct(
+      info.requestController,
+      params
+    )
+    return instance
   }
 
   private async getInjectedParameter(
