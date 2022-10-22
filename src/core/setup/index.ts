@@ -15,6 +15,7 @@ import { ClassStruct } from '../types'
 import {
   AbstractValidationFilter,
   validateMetadataKey,
+  validateMetadataName,
   ValidateResult
 } from '../validate'
 
@@ -353,6 +354,12 @@ export default class Server<T extends Function = Function> {
   ) {
     // 处理参数
     const parameters = await this.getInjectedParameter(req, res, info)
+    if (!Array.isArray(parameters) && !parameters.valid) {
+      // TODO: 参数校验的出口
+      res.setHeader('Content-Type', 'text/plain;charset=utf-8')
+      res.end(parameters.errorMessage)
+      return
+    }
 
     const context: Map<any, unknown> = await this.invokeMiddleware(
       req,
@@ -364,7 +371,7 @@ export default class Server<T extends Function = Function> {
     instance.context = context
     info.requestHandler
       .bind(instance)(
-        ...parameters.map((r) => {
+        ...(parameters as ResolvedParameter[]).map((r) => {
           return r.parameterValue
         })
       )
@@ -397,7 +404,7 @@ export default class Server<T extends Function = Function> {
     req: http.IncomingMessage,
     res: http.ServerResponse,
     info: ICollected
-  ): Promise<ResolvedParameter[]> {
+  ): Promise<ResolvedParameter[] | ValidateResult> {
     const resultParameters: ResolvedParameter[] = []
     const parameters = info.requestHandlerParameters
 
@@ -425,9 +432,7 @@ export default class Server<T extends Function = Function> {
         // 参数验证入口
         const result = this.validateParameter(parameterObject.parameterValue)
         if (!result.valid) {
-          // TODO: 参数校验的出口
-          res.setHeader('Content-Type', 'text/plain;charset=utf-8')
-          res.end(result.errorMessage)
+          return result
         }
 
         resultParameters.push(parameterObject)
@@ -463,21 +468,36 @@ export default class Server<T extends Function = Function> {
   ): ValidateResult {
     for (const key in object) {
       if (Object.prototype.hasOwnProperty.call(object, key)) {
-        const metadataValue = Reflect.getMetadata(
-          validateMetadataKey,
+        const metadataNameValue = Reflect.getMetadata(
+          validateMetadataName,
           object,
           key
-        ) as AbstractValidationFilter | undefined
-        if (!metadataValue) {
+        ) as string[] | undefined
+        if (!metadataNameValue || metadataNameValue.length === 0) {
           continue
         }
 
-        if (!metadataValue.validate(object[key])) {
-          return {
-            valid: false,
-            errorMessage: metadataValue.errorMessage
-          }
+        const validationFilters = metadataNameValue
+          .map((r) => `${key}.${r}`)
+          .map((r) => {
+            return Reflect.getMetadata(validateMetadataKey, object, r) as
+              | AbstractValidationFilter
+              | undefined
+          })
+          .filter((r) => r !== undefined) as AbstractValidationFilter[]
+        const inValidValidationResult = validationFilters
+          .map((r) => {
+            return {
+              valid: r.validate(object[key]),
+              errorMessage: r.errorMessage
+            }
+          })
+          .find((r) => !r.valid)
+        if (!inValidValidationResult) {
+          continue
         }
+
+        return inValidValidationResult
       }
     }
     return {

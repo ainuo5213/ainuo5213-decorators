@@ -1,25 +1,24 @@
+import 'reflect-metadata'
 import {
   AbstractValidationFilter,
-  validateMetadataKey
+  defineValidationMetadata
 } from './../../core/validate'
-import 'reflect-metadata'
+import { isNullable } from './is'
 
 export class RequiredValidationFilter extends AbstractValidationFilter {
   validate(data: string): boolean {
-    if (data === null || data === undefined || data === '') {
-      return false
-    }
-
-    return true
+    data = isNullable(data) ? '' : data
+    return data !== ''
   }
 }
 
+const validateMetadataNameValue = 'Required'
+
 export const Required = (message: string = ''): PropertyDecorator => {
-  return (target, propKey) => {
-    if (message.length === 0) {
-      message = `${propKey as string} is required`
-    }
-    const validation = new RequiredValidationFilter(message)
-    Reflect.defineMetadata(validateMetadataKey, validation, target, propKey)
-  }
+  const validation = Reflect.construct(RequiredValidationFilter, [message])
+  return defineValidationMetadata(
+    validation,
+    validateMetadataNameValue,
+    (type) => type === String
+  )
 }
