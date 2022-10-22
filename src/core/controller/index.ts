@@ -1,6 +1,9 @@
 import 'reflect-metadata'
 import { ICollected } from '../collected'
-import { ServiceKey, ServiceValue } from '../dependency-injection/types'
+import {
+  AbstractServiceProviderFactory,
+  ServiceValue
+} from '../dependency-injection/types'
 import { MiddlewareType } from '../middleware'
 import { AbstractParameterResolver, AsyncFunc, Parameter } from '../parameter'
 import { ClassStruct } from '../types'
@@ -142,7 +145,7 @@ export class BaseControllerResolver {
     const dependencies: Map<string, ServiceValue> = new Map()
     params.forEach((param) => {
       const dependencyValue = Reflect.getMetadata(
-        'dependency-injection',
+        AbstractServiceProviderFactory.__flag,
         param
       ) as ServiceValue | undefined
       if (!dependencyValue) {
