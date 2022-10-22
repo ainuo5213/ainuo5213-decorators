@@ -2,7 +2,7 @@
  * @Author: 孙永刚 1660998482@qq.com
  * @Date: 2022-10-15 17:42:11
  * @LastEditors: 孙永刚 1660998482@qq.com
- * @LastEditTime: 2022-10-22 09:26:00
+ * @LastEditTime: 2022-10-22 09:49:35
  * @FilePath: \ainuo5213-decorators\src\core\parameter\index.ts
  * @Description:
  *
@@ -29,6 +29,7 @@ export const generateParameterResolver = (metadataKey: string) => {
         object.prototype,
         `${handler.name}.${i}`
       ) as Parameter
+
       if (metadata) {
         objectParameterMetadatas.push(metadata)
       }

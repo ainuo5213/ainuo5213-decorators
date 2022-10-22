@@ -12,7 +12,7 @@ import { ClassStruct } from '../types'
  * @Author: 孙永刚 1660998482@qq.com
  * @Date: 2022-10-15 17:01:04
  * @LastEditors: 孙永刚 1660998482@qq.com
- * @LastEditTime: 2022-10-22 08:04:34
+ * @LastEditTime: 2022-10-22 09:48:42
  * @FilePath: \ainuo5213-decorators\src\core\controller\index.ts
  * @Description:
  *

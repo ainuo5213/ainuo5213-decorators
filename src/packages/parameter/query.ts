@@ -2,7 +2,7 @@
  * @Author: 孙永刚 1660998482@qq.com
  * @Date: 2022-10-15 17:10:48
  * @LastEditors: 孙永刚 1660998482@qq.com
- * @LastEditTime: 2022-10-22 09:31:41
+ * @LastEditTime: 2022-10-22 09:35:20
  * @FilePath: \ainuo5213-decorators\src\packages\parameter\query.ts
  * @Description: Query装饰器
  *
@@ -51,14 +51,7 @@ export class ModelQueryParameterResolver extends AbstractParameterResolver {
     info: ICollected
   ): ResolvedParameter | Nullable {
     const { query = '' } = parseUrl(req.url!)
-    // const paramType = Reflect.getMetadata('design:paramtypes', target, propKey)
-
-    if (!query) {
-      return
-    }
-    const queryObject = parseQuery(query)
-
-    const paramKey = parameter.injectParameterKey as string
+    const queryObject = parseQuery(query!)
 
     if (typeof parameter.paramType !== 'function') {
       throw new TypeError(`${info.requestMethod}'s parameter is not a class`)

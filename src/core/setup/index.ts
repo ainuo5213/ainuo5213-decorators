@@ -12,6 +12,11 @@ import {
   AbstractServiceProviderFactory
 } from '../dependency-injection/types'
 import { ClassStruct } from '../types'
+import {
+  AbstractValidationFilter,
+  validateMetadataKey,
+  ValidateResult
+} from '../validate'
 
 export type ParameterObjectType = {
   parameterValue: any
@@ -347,7 +352,7 @@ export default class Server<T extends Function = Function> {
     info: ICollected
   ) {
     // 处理参数
-    const parameters = await this.getInjectedParameter(req, info)
+    const parameters = await this.getInjectedParameter(req, res, info)
 
     const context: Map<any, unknown> = await this.invokeMiddleware(
       req,
@@ -390,6 +395,7 @@ export default class Server<T extends Function = Function> {
 
   private async getInjectedParameter(
     req: http.IncomingMessage,
+    res: http.ServerResponse,
     info: ICollected
   ): Promise<ResolvedParameter[]> {
     const resultParameters: ResolvedParameter[] = []
@@ -416,6 +422,14 @@ export default class Server<T extends Function = Function> {
           continue
         }
 
+        // 参数验证入口
+        const result = this.validateParameter(parameterObject.parameterValue)
+        if (!result.valid) {
+          // TODO: 参数校验的出口
+          res.setHeader('Content-Type', 'text/plain;charset=utf-8')
+          res.end(result.errorMessage)
+        }
+
         resultParameters.push(parameterObject)
       }
     }
@@ -423,5 +437,52 @@ export default class Server<T extends Function = Function> {
     resultParameters.sort((a, b) => a.parameterIndex - b.parameterIndex)
 
     return resultParameters
+  }
+
+  private validateParameter(object: unknown): ValidateResult {
+    // 对象的情况
+    if (typeof object === 'object' && !Array.isArray(object)) {
+      return this.validateObjectParameter(object as Record<string, unknown>)
+    } else if (Array.isArray(object)) {
+      return {
+        valid: true,
+        errorMessage: ''
+      }
+      // return this.validateArrayParameter(object)
+    } else {
+      return {
+        valid: true,
+        errorMessage: ''
+      }
+      // return this.validatePrimativeParameter(object)
+    }
+  }
+
+  private validateObjectParameter(
+    object: Record<string, unknown>
+  ): ValidateResult {
+    for (const key in object) {
+      if (Object.prototype.hasOwnProperty.call(object, key)) {
+        const metadataValue = Reflect.getMetadata(
+          validateMetadataKey,
+          object,
+          key
+        ) as AbstractValidationFilter | undefined
+        if (!metadataValue) {
+          continue
+        }
+
+        if (!metadataValue.validate(object[key])) {
+          return {
+            valid: false,
+            errorMessage: metadataValue.errorMessage
+          }
+        }
+      }
+    }
+    return {
+      valid: true,
+      errorMessage: ''
+    }
   }
 }

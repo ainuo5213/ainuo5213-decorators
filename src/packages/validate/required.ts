@@ -5,8 +5,12 @@ import {
 import 'reflect-metadata'
 
 export class RequiredValidationFilter extends AbstractValidationFilter {
-  validate(data: any): boolean {
-    throw new Error('Method not implemented.')
+  validate(data: string): boolean {
+    if (data === null || data === undefined || data === '') {
+      return false
+    }
+
+    return true
   }
 }
 
@@ -16,6 +20,6 @@ export const Required = (message: string = ''): PropertyDecorator => {
       message = `${propKey as string} is required`
     }
     const validation = new RequiredValidationFilter(message)
-    Reflect.defineMetadata(validateMetadataKey, validation, propKey)
+    Reflect.defineMetadata(validateMetadataKey, validation, target, propKey)
   }
 }
