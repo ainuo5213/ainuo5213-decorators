@@ -208,6 +208,7 @@ export default class Server<T extends Function = Function> {
   private isMatchParam(pathname: string) {
     // pathname: /user/1
     // 从collected找到能匹配到的最小层级的param路由
+
     const realPathNameParams = pathname.split('/').filter((r) => r)
 
     if (realPathNameParams.length === 0) {
@@ -219,10 +220,20 @@ export default class Server<T extends Function = Function> {
     let restCollected = [...this.collected]
 
     let minLevelCollected: ICollected[] = [...restCollected]
+
     let index = 1
     while (restCollected.length !== 0) {
       const _params = '/' + realPathNameParams.slice(0, index++).join('/')
       restCollected = this.collected.filter((r) => r.path.startsWith(_params))
+      if (_params === pathname) {
+        const collectedInfo = this.collected.find((r) =>
+          r.path.startsWith(_params)
+        )
+        return {
+          isMatched: !!collectedInfo === true,
+          collectedInfo: collectedInfo
+        }
+      }
       if (restCollected.length > 0) {
         minLevelCollected = restCollected
       }

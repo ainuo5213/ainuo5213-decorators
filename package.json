@@ -20,8 +20,10 @@
   "homepage": "https://github.com/ainuo5213/ainuo-decorators#readme",
   "dependencies": {
     "@types/multiparty": "^0.0.33",
+    "@types/qs": "^6.9.7",
     "multiparty": "^4.2.3",
     "nodemon": "^2.0.20",
+    "qs": "^6.11.0",
     "reflect-metadata": "^0.1.13"
   },
   "devDependencies": {

@@ -2,7 +2,7 @@
  * @Author: 孙永刚 1660998482@qq.com
  * @Date: 2022-10-15 17:42:11
  * @LastEditors: 孙永刚 1660998482@qq.com
- * @LastEditTime: 2022-10-16 11:02:56
+ * @LastEditTime: 2022-10-22 09:26:00
  * @FilePath: \ainuo5213-decorators\src\core\parameter\index.ts
  * @Description:
  *
@@ -17,6 +17,7 @@ export type Parameter = {
   index: number
   injectParameterKey: string | symbol
   paramFrom: string
+  paramType: unknown
 }
 
 export const generateParameterResolver = (metadataKey: string) => {
@@ -66,11 +67,14 @@ function addParameter(
   parameterName: string
 ): ParameterDecorator {
   return (target, propKey, paramIndex) => {
+    const paramType = Reflect.getMetadata('design:paramtypes', target, propKey)
+
     const parameter = {
       index: paramIndex,
       injectParameterKey: parameterName,
-      paramFrom: from
-    }
+      paramFrom: from,
+      paramType: paramType[0]
+    } as Parameter
 
     Reflect.defineMetadata(
       metadataKey,
