@@ -2,7 +2,7 @@
  * @Author: 孙永刚 1660998482@qq.com
  * @Date: 2022-10-15 17:10:52
  * @LastEditors: 孙永刚 1660998482@qq.com
- * @LastEditTime: 2022-10-16 10:24:10
+ * @LastEditTime: 2022-10-22 16:04:45
  * @FilePath: \ainuo5213-decorators\src\packages\parameter\param.ts
  * @Description:
  *
@@ -10,7 +10,6 @@
  */
 import { IncomingMessage } from 'http'
 import { parse as parseUrl } from 'url'
-import { ICollected } from '../../core/collected'
 import {
   AbstractParameterResolver,
   generateParameterDecorator,
@@ -18,6 +17,7 @@ import {
   Parameter,
   ResolvedParameter
 } from '../../core/parameter'
+import { ICollected } from '../../core/types'
 
 export const Param = generateParameterDecorator('param')
 

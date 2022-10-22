@@ -1,18 +1,17 @@
 import 'reflect-metadata'
-import { ICollected } from '../collected'
 import {
   AbstractServiceProviderFactory,
   ServiceValue
 } from '../dependency-injection/types'
 import { MiddlewareType } from '../middleware'
 import { AbstractParameterResolver, AsyncFunc, Parameter } from '../parameter'
-import { ClassStruct } from '../types'
+import { ClassStruct, ICollected } from '../types'
 
 /*
  * @Author: 孙永刚 1660998482@qq.com
  * @Date: 2022-10-15 17:01:04
  * @LastEditors: 孙永刚 1660998482@qq.com
- * @LastEditTime: 2022-10-22 09:48:42
+ * @LastEditTime: 2022-10-22 16:05:14
  * @FilePath: \ainuo5213-decorators\src\core\controller\index.ts
  * @Description:
  *

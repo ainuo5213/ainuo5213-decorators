@@ -1,10 +1,7 @@
 import 'reflect-metadata'
-import { ModuleOption } from './../../packages/module/index'
-import { ICollected } from '../collected'
-import { BaseController, BaseControllerResolver } from '../controller'
+import { BaseControllerResolver } from '../controller'
 import { MiddlewareType } from '../middleware'
-import { InjectOption } from '../dependency-injection/types'
-import { ClassStruct } from '../types'
+import { ICollected, ModuleOption } from '../types'
 
 export class AppModule {}
 

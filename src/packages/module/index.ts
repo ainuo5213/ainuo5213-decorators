@@ -1,12 +1,15 @@
-import { BaseController } from '../../core/controller'
-import { MiddlewareType } from '../../core/middleware'
+/*
+ * @Author: 孙永刚 1660998482@qq.com
+ * @Date: 2022-10-16 09:31:33
+ * @LastEditors: 孙永刚 1660998482@qq.com
+ * @LastEditTime: 2022-10-22 16:04:37
+ * @FilePath: \ainuo5213-decorators\src\packages\module\index.ts
+ * @Description:
+ *
+ * Copyright (c) 2022 by 孙永刚 1660998482@qq.com, All Rights Reserved.
+ */
 import { AppModule } from '../../core/module'
-
-export type ModuleOption = Partial<{
-  controllers: typeof BaseController[]
-  modules: typeof AppModule[]
-  middleware: MiddlewareType[]
-}>
+import { ModuleOption } from '../../core/types'
 
 export const Module = (option: ModuleOption): ClassDecorator => {
   return (target) => {

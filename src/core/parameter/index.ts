@@ -2,15 +2,15 @@
  * @Author: 孙永刚 1660998482@qq.com
  * @Date: 2022-10-15 17:42:11
  * @LastEditors: 孙永刚 1660998482@qq.com
- * @LastEditTime: 2022-10-22 09:49:35
+ * @LastEditTime: 2022-10-22 16:05:04
  * @FilePath: \ainuo5213-decorators\src\core\parameter\index.ts
  * @Description:
  *
  * Copyright (c) 2022 by 孙永刚 1660998482@qq.com, All Rights Reserved.
  */
 import { IncomingMessage } from 'http'
-import { ICollected } from '../collected'
 import 'reflect-metadata'
+import { ICollected } from '../types'
 
 export type AsyncFunc = (...args: any[]) => Promise<any>
 export type Parameter = {

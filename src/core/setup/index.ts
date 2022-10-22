@@ -1,6 +1,5 @@
 import http, { IncomingMessage } from 'http'
 import { parse as parseUrl } from 'url'
-import { ICollected } from '../collected'
 import { AbstractParameterResolver, ResolvedParameter } from '../parameter'
 import { BaseModuleResolver } from '../module'
 import { AbstractMiddleware } from '../middleware'
@@ -11,7 +10,7 @@ import {
   AbstractContainerBuilder,
   AbstractServiceProviderFactory
 } from '../dependency-injection/types'
-import { ClassStruct } from '../types'
+import { ClassStruct, ICollected } from '../types'
 import {
   AbstractValidationFilter,
   validateMetadataKey,
