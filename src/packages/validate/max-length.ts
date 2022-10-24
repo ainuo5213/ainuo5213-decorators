@@ -25,7 +25,7 @@ const validateMetadataNameValue = 'MaxLength'
 export const MaxLength = (
   maxLength: number = 0,
   message: string = ''
-): PropertyDecorator => {
+): PropertyDecorator | ParameterDecorator => {
   const validation = Reflect.construct(MaxLengthValidationFilter, [
     maxLength,
     message

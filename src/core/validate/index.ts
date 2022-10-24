@@ -28,21 +28,29 @@ export function defineValidationMetadata(
   validation: AbstractValidationFilter,
   validateMetadataNameValue: string,
   typeCheckPredict?: (type: Function) => boolean
-): PropertyDecorator {
-  return (target, propKey) => {
-    if (
-      typeof typeCheckPredict === 'function' &&
-      !typeCheckPredict(Reflect.getMetadata('design:type', target, propKey))
-    ) {
+): ParameterDecorator | PropertyDecorator {
+  return (target: Object, propKey: string | symbol, paramIndex?: number) => {
+    const type =
+      paramIndex !== undefined
+        ? Reflect.getMetadata('design:paramtypes', target, propKey)[0]
+        : Reflect.getMetadata('design:type', target, propKey)
+    if (typeof typeCheckPredict === 'function' && !typeCheckPredict(type)) {
       throw new TypeError(
         `type is not compatible for key '${propKey as string}'`
       )
     }
+    let validateNamePropertyKey =
+      paramIndex !== undefined ? `${propKey as string}.${paramIndex}` : propKey
+
+    let validateKeyPropertyKey =
+      paramIndex !== undefined
+        ? `${propKey as string}.${paramIndex}.${validateMetadataNameValue}`
+        : `${propKey as string}.${validateMetadataNameValue}`
 
     let validationNames = Reflect.getMetadata(
       validateMetadataName,
       target,
-      propKey
+      validateNamePropertyKey
     ) as string[] | undefined
     if (validationNames === undefined) {
       validationNames = []
@@ -50,18 +58,19 @@ export function defineValidationMetadata(
     if (!validationNames.includes(validateMetadataNameValue)) {
       validationNames.unshift(validateMetadataNameValue)
     }
+
     Reflect.defineMetadata(
       validateMetadataName,
       validationNames,
       target,
-      propKey
+      validateNamePropertyKey
     )
 
     Reflect.defineMetadata(
       validateMetadataKey,
       validation,
       target,
-      `${propKey as string}.${validateMetadataNameValue}`
+      validateKeyPropertyKey
     )
   }
 }

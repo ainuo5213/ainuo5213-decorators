@@ -13,7 +13,7 @@ import { Controller } from '../src/packages/controller/controller'
 import { ModelQuery, Query } from '../src/packages/parameter/query'
 import { Get } from '../src/packages/route/get'
 import { ToyService } from './toy.service'
-import { UserDTO } from './UserDTO'
+import { MaxLength } from '../src/packages/validate/max-length'
 
 @Controller('/toy')
 export class ToyController extends BaseController {
@@ -21,14 +21,14 @@ export class ToyController extends BaseController {
     super()
   }
   @Get('/list')
-  async userList(@ModelQuery() model: UserDTO) {
+  async userList(@MaxLength(10, 'asdasd') @Query('id') id: string) {
     const result = this.toyService.getObj()
 
     // console.log(this.toyService!.getObj())
     return {
       // id,
       result,
-      model
+      id
       // success: true,
       // code: 10000,
       // id,

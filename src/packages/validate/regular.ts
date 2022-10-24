@@ -36,7 +36,7 @@ const validateMetadataNameValue = 'Regular'
 export const Regular = (
   regExp: RegExp,
   message: string = ''
-): PropertyDecorator => {
+): PropertyDecorator | ParameterDecorator => {
   const validation = Reflect.construct(RegularValidationFilter, [
     regExp,
     message

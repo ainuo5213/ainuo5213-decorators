@@ -1,6 +1,10 @@
 import http, { IncomingMessage } from 'http'
 import { parse as parseUrl } from 'url'
-import { AbstractParameterResolver, ResolvedParameter } from '../parameter'
+import {
+  AbstractParameterResolver,
+  Parameter,
+  ResolvedParameter
+} from '../parameter'
 import { BaseModuleResolver } from '../module'
 import { AbstractMiddleware } from '../middleware'
 import { MaybeNull } from '../module'
@@ -351,8 +355,9 @@ export default class Server<T extends Function = Function> {
     res: http.ServerResponse,
     info: ICollected
   ) {
+    const instance = this.getControllerInstance(info)
     // 处理参数
-    const parameters = await this.getInjectedParameter(req, res, info)
+    const parameters = await this.getInjectedParameter(req, res, info, instance)
     if (!Array.isArray(parameters) && !parameters.valid) {
       // TODO: 参数校验的出口
       res.setHeader('Content-Type', 'text/plain;charset=utf-8')
@@ -366,7 +371,6 @@ export default class Server<T extends Function = Function> {
       info
     )
 
-    const instance = this.getControllerInstance(info)
     instance.context = context
     info.requestHandler
       .bind(instance)(
@@ -402,7 +406,8 @@ export default class Server<T extends Function = Function> {
   private async getInjectedParameter(
     req: http.IncomingMessage,
     res: http.ServerResponse,
-    info: ICollected
+    info: ICollected,
+    controllerInstance: BaseController
   ): Promise<ResolvedParameter[] | ValidateResult> {
     const resultParameters: ResolvedParameter[] = []
     const parameters = info.requestHandlerParameters
@@ -429,7 +434,12 @@ export default class Server<T extends Function = Function> {
         }
 
         // 参数验证入口
-        const result = this.validateParameter(parameterObject.parameterValue)
+        const result = this.validateParameter(
+          parameterObject.parameterValue,
+          controllerInstance,
+          info,
+          parameter
+        )
         if (!result.valid) {
           return result
         }
@@ -443,10 +453,22 @@ export default class Server<T extends Function = Function> {
     return resultParameters
   }
 
-  private validateParameter(object: unknown): ValidateResult {
+  private validateParameter(
+    object: unknown,
+    controllerInstance: BaseController,
+    info: ICollected,
+    parameter: Parameter
+  ): ValidateResult {
+    console.log(object)
+    // Reflect.getMetadata(validateMetadataKey, object as Object)
     // 对象的情况
     if (typeof object === 'object' && !Array.isArray(object)) {
-      return this.validateObjectParameter(object as Record<string, unknown>)
+      return this.validateObjectParameter(
+        object as Record<string, unknown>,
+        controllerInstance,
+        info,
+        parameter
+      )
     } else if (Array.isArray(object)) {
       return {
         valid: true,
@@ -454,16 +476,71 @@ export default class Server<T extends Function = Function> {
       }
       // return this.validateArrayParameter(object)
     } else {
+      return this.validatePrimativeParameter(
+        object,
+        controllerInstance,
+        info,
+        parameter
+      )
+      console.log(
+        Reflect.getMetadata(
+          validateMetadataKey,
+          controllerInstance,
+          `${info.requestHandler.name as string}.${0}.${'MaxLength'}`
+        )
+      )
+    }
+  }
+
+  private validatePrimativeParameter(
+    object: unknown,
+    controllerInstance: BaseController,
+    info: ICollected,
+    parameter: Parameter
+  ) {
+    const metadataNameValue = Reflect.getMetadata(
+      validateMetadataName,
+      controllerInstance,
+      `${info.requestHandler.name}.${parameter.index}`
+    ) as string[] | undefined
+    if (!metadataNameValue || metadataNameValue.length === 0) {
       return {
         valid: true,
         errorMessage: ''
       }
-      // return this.validatePrimativeParameter(object)
     }
+
+    const validationFilters = metadataNameValue
+      .map((r) => `${info.requestHandler.name}.${parameter.index}.${r}`)
+      .map((r) => {
+        return Reflect.getMetadata(
+          validateMetadataKey,
+          controllerInstance,
+          r
+        ) as AbstractValidationFilter | undefined
+      })
+      .filter((r) => r !== undefined) as AbstractValidationFilter[]
+    const inValidValidationResult = validationFilters
+      .map((r) => {
+        return {
+          valid: r.validate(object),
+          errorMessage: r.errorMessage
+        }
+      })
+      .find((r) => !r.valid)
+    return (
+      inValidValidationResult || {
+        valid: true,
+        errorMessage: ''
+      }
+    )
   }
 
   private validateObjectParameter(
-    object: Record<string, unknown>
+    object: Record<string, unknown>,
+    controllerInstance: BaseController,
+    info: ICollected,
+    parameter: Parameter
   ): ValidateResult {
     for (const key in object) {
       if (Object.prototype.hasOwnProperty.call(object, key)) {

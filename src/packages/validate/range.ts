@@ -26,7 +26,7 @@ export const Range = (
   minLength: number,
   maxLength: number,
   message: string = ''
-): PropertyDecorator => {
+): PropertyDecorator | ParameterDecorator => {
   const validation = Reflect.construct(RangeValidationFi1lter, [
     minLength,
     maxLength,

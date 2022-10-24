@@ -23,7 +23,9 @@ export class NotNullValidationFilter extends AbstractValidationFilter {
 
 const validateMetadataNameValue = 'NotNull'
 
-export const NotNull = (message: string = ''): PropertyDecorator => {
+export const NotNull = (
+  message: string = ''
+): PropertyDecorator | ParameterDecorator => {
   const validation = Reflect.construct(NotNullValidationFilter, [message])
   return defineValidationMetadata(validation, validateMetadataNameValue)
 }

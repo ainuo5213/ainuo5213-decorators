@@ -14,8 +14,8 @@ import Server from '../src/core/setup'
 // import { HeaderParameterResolver } from '../src/packages/parameter/header'
 // import { ParamParameterResolver } from '../src/packages/parameter/param'
 import {
-  ModelQueryParameterResolver
-  // QueryParameterResolver
+  ModelQueryParameterResolver,
+  QueryParameterResolver
 } from '../src/packages/parameter/query'
 import IndexModule from './index.module'
 
@@ -23,7 +23,7 @@ async function bootstrap() {
   const app = Server.create(IndexModule)
   await app
     .useServiceProviderFactory(new ServiceProviderFactory())
-    // .useParameterResolver(new QueryParameterResolver())
+    .useParameterResolver(new QueryParameterResolver())
     // .useParameterResolver(new HeaderParameterResolver())
     // .useParameterResolver(new BodyParameterResolver())
     // .useParameterResolver(new ParamParameterResolver())

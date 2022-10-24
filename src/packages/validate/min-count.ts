@@ -19,7 +19,7 @@ const validateMetadataNameValue = 'MinCount'
 export const MinCount = (
   minCount: number = 0,
   message: string = ''
-): PropertyDecorator => {
+): PropertyDecorator | ParameterDecorator => {
   const validation = Reflect.construct(MinCountValidationFilter, [
     minCount,
     message
