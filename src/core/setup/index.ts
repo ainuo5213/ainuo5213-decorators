@@ -388,18 +388,35 @@ export default class Server<T extends Function = Function> {
 
   private getControllerInstance(info: ICollected) {
     const params: ClassStruct[] = []
+
     // 对于构造函数注入的需要提前初始化其依赖
+    const propertyInstances: {
+      propKey: string
+      instance: ClassStruct
+    }[] = []
     info.dependencies.forEach((dep) => {
       const depInstance = this.container.resolve<ClassStruct>(
         dep.constructor.name
       )
-      params.push(depInstance)
+      if (dep.resolveType === 'constructor') {
+        params.push(depInstance)
+      } else {
+        propertyInstances.push({
+          propKey: dep.propKey!,
+          instance: depInstance
+        })
+      }
     })
 
     const instance: BaseController = Reflect.construct(
       info.requestController,
       params
     )
+
+    propertyInstances.forEach((r) => {
+      ;(instance as any)[r.propKey] = r.instance
+    })
+
     return instance
   }
 

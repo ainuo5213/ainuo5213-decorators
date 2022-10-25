@@ -27,9 +27,12 @@ export type InjectOption = {
 }
 
 export type ServiceKey<T = any> = string | ClassStruct<T> | Function
+export type ResolveType = 'constructor' | 'property'
 export type ServiceValue<T = any> = {
   option: InjectOption
   constructor: Function
+  resolveType: ResolveType
+  propKey?: string
   dependencies: Map<string, ServiceValue<T>>
 }
 

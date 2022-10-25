@@ -2,7 +2,7 @@
  * @Author: 孙永刚 1660998482@qq.com
  * @Date: 2022-10-15 17:10:52
  * @LastEditors: 孙永刚 1660998482@qq.com
- * @LastEditTime: 2022-10-16 10:25:26
+ * @LastEditTime: 2022-10-25 21:31:22
  * @FilePath: \ainuo5213-decorators\src\packages\parameter\body.ts
  * @Description:
  *
@@ -11,6 +11,8 @@
 import { IncomingMessage } from 'http'
 import {
   AbstractParameterResolver,
+  ApiPropertyMetadataKey,
+  ApiPropertyType,
   generateParameterDecorator,
   Parameter,
   ResolvedParameter
@@ -36,14 +38,17 @@ export class BodyParameterResolver extends AbstractParameterResolver {
         const parmasObject = JSON.parse(postBodyString)
 
         const instance = Reflect.construct(parameter.paramType as Function, [])
+        const apiProperties: ApiPropertyType[] = Reflect.getMetadata(
+          ApiPropertyMetadataKey,
+          instance
+        )
 
-        Reflect.ownKeys(instance).forEach((r) => {
-          const queryObjectItem = parmasObject[r as string]
+        apiProperties.forEach((r) => {
+          const queryObjectItem = parmasObject[r.propertyKey]
           if (queryObjectItem !== undefined) {
-            instance[r] = queryObjectItem
+            instance[r.propertyKey] = queryObjectItem
           }
         })
-        console.log(parmasObject, instance)
 
         resolve({
           parameterIndex: parameter.index,

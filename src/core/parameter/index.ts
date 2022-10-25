@@ -2,7 +2,7 @@
  * @Author: 孙永刚 1660998482@qq.com
  * @Date: 2022-10-15 17:42:11
  * @LastEditors: 孙永刚 1660998482@qq.com
- * @LastEditTime: 2022-10-22 16:05:04
+ * @LastEditTime: 2022-10-25 21:31:09
  * @FilePath: \ainuo5213-decorators\src\core\parameter\index.ts
  * @Description:
  *
@@ -104,5 +104,35 @@ export function generateParameterDecorator(
   } else {
     return (): ParameterDecorator =>
       addParameter(metadataKey, metadataKey, metadataKey)
+  }
+}
+
+export const ApiPropertyMetadataKey = Symbol('api-property')
+
+export type ApiPropertyType = {
+  propertyType: Function
+  propertyKey: string
+}
+
+export const ApiProperty = (): PropertyDecorator => {
+  return (target, propKey) => {
+    const propType = Reflect.getMetadata(
+      'design:type',
+      target,
+      propKey
+    ) as Function
+    const property: ApiPropertyType = {
+      propertyKey: propKey as string,
+      propertyType: propType
+    }
+    const apiProperties =
+      (Reflect.getMetadata(ApiPropertyMetadataKey, target) as
+        | ApiPropertyType[]
+        | undefined) || []
+    if (apiProperties.findIndex((r) => r.propertyKey === propKey) === -1) {
+      apiProperties.push(property)
+    }
+
+    Reflect.defineMetadata(ApiPropertyMetadataKey, apiProperties, target)
   }
 }

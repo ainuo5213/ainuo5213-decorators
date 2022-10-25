@@ -2,7 +2,7 @@
  * @Author: 孙永刚 1660998482@qq.com
  * @Date: 2022-10-15 17:01:04
  * @LastEditors: 孙永刚 1660998482@qq.com
- * @LastEditTime: 2022-10-22 09:31:46
+ * @LastEditTime: 2022-10-25 22:30:29
  * @FilePath: \ainuo5213-decorators\sample\toy.controller.ts
  * @Description:
  *
@@ -16,17 +16,15 @@ import { Post } from '../src/packages/route/post'
 import { ToyService } from './toy.service'
 import { Body } from '../src/packages/parameter/body'
 import { UserDTO } from './UserDTO'
+import { Autowired } from '../src/core/dependency-injection/autowired'
 
 @Controller('/toy')
 export class ToyController extends BaseController {
-  constructor(private toyService: ToyService) {
-    super()
-  }
+  @Autowired()
+  toyService: ToyService
   @Post('/list')
   async userList(@Body() userDTO: UserDTO) {
     const result = this.toyService.getObj()
-
-    // console.log(this.toyService!.getObj())
     return {
       // id,
       result,

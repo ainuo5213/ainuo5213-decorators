@@ -1,4 +1,18 @@
+/*
+ * @Author: 孙永刚 1660998482@qq.com
+ * @Date: 2022-10-15 17:01:04
+ * @LastEditors: 孙永刚 1660998482@qq.com
+ * @LastEditTime: 2022-10-25 22:10:41
+ * @FilePath: \ainuo5213-decorators\src\core\controller\index.ts
+ * @Description:
+ *
+ * Copyright (c) 2022 by 孙永刚 1660998482@qq.com, All Rights Reserved.
+ */
 import 'reflect-metadata'
+import {
+  AutowiredMetadata,
+  autowiredMetadataPropKey
+} from '../dependency-injection/autowired'
 import {
   AbstractServiceProviderFactory,
   ServiceValue
@@ -6,17 +20,6 @@ import {
 import { MiddlewareType } from '../middleware'
 import { AbstractParameterResolver, AsyncFunc, Parameter } from '../parameter'
 import { ClassStruct, ICollected } from '../types'
-
-/*
- * @Author: 孙永刚 1660998482@qq.com
- * @Date: 2022-10-15 17:01:04
- * @LastEditors: 孙永刚 1660998482@qq.com
- * @LastEditTime: 2022-10-22 16:05:14
- * @FilePath: \ainuo5213-decorators\src\core\controller\index.ts
- * @Description:
- *
- * Copyright (c) 2022 by 孙永刚 1660998482@qq.com, All Rights Reserved.
- */
 export class BaseController {
   private static context: any
   constructor(...args: any[]) {}
@@ -77,8 +80,24 @@ export class BaseControllerResolver {
         | undefined) || []
 
     // 读取构造函数的参数
-    const ctorParams = Reflect.getMetadata('design:paramtypes', controller)
-    const dependencies = this.resolveDependencies(ctorParams)
+    const ctorParams =
+      (Reflect.getMetadata('design:paramtypes', controller) as
+        | ClassStruct[]
+        | undefined) || []
+
+    // 读取属性注入的参数
+    const propertyParams =
+      (Reflect.getMetadata(autowiredMetadataPropKey, prototype) as
+        | AutowiredMetadata[]
+        | undefined) || []
+
+    const ctorDependencies = this.resolveConstructorDependencies(ctorParams)
+    const propDependencies = this.resolvePropertyDependencies(propertyParams)
+    // 合并依赖
+    const dependencies = this.mergeDependencies(
+      ctorDependencies,
+      propDependencies
+    )
 
     // 获取非构造函数的方法
     const methods = Reflect.ownKeys(prototype).filter(
@@ -139,28 +158,91 @@ export class BaseControllerResolver {
 
     return collected
   }
+  mergeDependencies(
+    ctorDependencies: Map<string, ServiceValue<any>>,
+    propDependencies: Map<string, ServiceValue<any>>
+  ): Map<string, ServiceValue> {
+    const dependencies: Map<string, ServiceValue> = new Map()
+    // 属性注入拥有更高的优先级
+    propDependencies.forEach((r) => {
+      if (!dependencies.has(r.constructor.name)) {
+        dependencies.set(r.constructor.name, r)
+      }
+    })
+    ctorDependencies.forEach((r) => {
+      if (!dependencies.has(r.constructor.name)) {
+        dependencies.set(r.constructor.name, r)
+      }
+    })
+    return dependencies
+  }
 
-  resolveDependencies(params: ClassStruct[]) {
+  resolveConstructorDependencies(params: ClassStruct[]) {
     const dependencies: Map<string, ServiceValue> = new Map()
     params.forEach((param) => {
-      const dependencyValue = Reflect.getMetadata(
+      const injectedDependencyValue = Reflect.getMetadata(
         AbstractServiceProviderFactory.__flag,
         param
       ) as ServiceValue | undefined
-      if (!dependencyValue) {
+      console.log(injectedDependencyValue)
+
+      if (!injectedDependencyValue) {
         throw new Error(`${param.name}'s dependency is not injected`)
       }
 
       const ctorParams = Reflect.getMetadata('design:paramtypes', param) as
         | ClassStruct[]
         | undefined
+
       if (ctorParams && ctorParams.length > 0) {
-        dependencyValue.dependencies = this.resolveDependencies(ctorParams)
+        injectedDependencyValue.dependencies =
+          this.resolveConstructorDependencies(ctorParams)
       } else {
-        dependencyValue.dependencies = new Map()
+        injectedDependencyValue.dependencies = new Map()
       }
-      dependencies.set(dependencyValue.constructor.name, dependencyValue)
+      injectedDependencyValue.resolveType = 'constructor'
+      dependencies.set(
+        injectedDependencyValue.constructor.name,
+        injectedDependencyValue
+      )
     })
+    return dependencies
+  }
+
+  resolvePropertyDependencies(params: AutowiredMetadata[]) {
+    const dependencies: Map<string, ServiceValue> = new Map()
+    params.forEach((param) => {
+      const propKey = param.autowiredKey
+      const propType = param.autowiredType
+      const injectedDependencyValue = Reflect.getMetadata(
+        AbstractServiceProviderFactory.__flag,
+        propType
+      ) as ServiceValue | undefined
+      if (!injectedDependencyValue) {
+        throw new Error(
+          `${param.autowiredType.name}'s dependency is not injected`
+        )
+      }
+
+      const propertyParams =
+        (Reflect.getMetadata(autowiredMetadataPropKey, propType.prototype) as
+          | AutowiredMetadata[]
+          | undefined) || []
+      if (propertyParams && propertyParams.length > 0) {
+        injectedDependencyValue.dependencies =
+          this.resolvePropertyDependencies(propertyParams)
+      } else {
+        injectedDependencyValue.dependencies = new Map()
+      }
+      injectedDependencyValue.resolveType = 'property'
+      injectedDependencyValue.propKey = propKey
+
+      dependencies.set(
+        injectedDependencyValue.constructor.name,
+        injectedDependencyValue
+      )
+    })
+
     return dependencies
   }
 }

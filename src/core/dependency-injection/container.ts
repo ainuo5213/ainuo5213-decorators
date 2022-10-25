@@ -3,7 +3,7 @@ import { ServiceKey } from './types'
  * @Author: 孙永刚 1660998482@qq.com
  * @Date: 2022-10-22 07:19:13
  * @LastEditors: 孙永刚 1660998482@qq.com
- * @LastEditTime: 2022-10-22 07:41:22
+ * @LastEditTime: 2022-10-25 22:27:29
  * @FilePath: \ainuo5213-decorators\src\core\dependency-injection\container.ts
  * @Description:
  *
@@ -11,6 +11,7 @@ import { ServiceKey } from './types'
  */
 import { ClassStruct } from '../types'
 import { AbstractContainer, ServiceValue, Lifecycle } from './types'
+import { autowiredMetadataPropKey } from './autowired'
 
 export class Container extends AbstractContainer {
   protected services: Map<ServiceKey, ServiceValue> = new Map()
@@ -43,7 +44,8 @@ export class Container extends AbstractContainer {
       case Lifecycle.singleton:
         return this.resolveSingleton(serviceValue)
       case Lifecycle.scoped:
-        return this.resolveScope(serviceValue)
+        const instance = this.resolveScope(serviceValue)
+        return instance as T
       case Lifecycle.transiant:
         return this.resolveTransiant(serviceValue)
       default:
@@ -78,11 +80,31 @@ export class Container extends AbstractContainer {
   }
 
   private resolveInstance<T>(serviceValue: ServiceValue): T {
+    if (serviceValue.resolveType === 'constructor') {
+      return this.resolveConstructorInstance(serviceValue)
+    } else {
+      return this.resolvePropertyInstance(serviceValue)
+    }
+  }
+
+  private resolvePropertyInstance<T>(serviceValue: ServiceValue): T {
+    const instance = Reflect.construct(serviceValue.constructor, []) as T
+    serviceValue.dependencies.forEach((dep) => {
+      const depInstance = this.resolveInstance<ClassStruct>(dep)
+      ;(instance as any)[dep.propKey!] = depInstance
+    })
+
+    return instance
+  }
+
+  private resolveConstructorInstance<T>(serviceValue: ServiceValue): T {
     const params: ClassStruct[] = []
     serviceValue.dependencies.forEach((dep) => {
       const depInstance = this.resolveInstance<ClassStruct>(dep)
       params.push(depInstance)
     })
-    return Reflect.construct(serviceValue.constructor, params) as T
+    const instance = Reflect.construct(serviceValue.constructor, params) as T
+
+    return instance
   }
 }
