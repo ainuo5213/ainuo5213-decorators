@@ -63,7 +63,10 @@ export function defineValidationMetadata(
     if (!validationNames.includes(validateMetadataNameValue)) {
       validationNames.unshift(validateMetadataNameValue)
     }
-    // 定义对象的字段
+    // 定义对象的字段。
+    // TODO: 由于typescript的限制一个属性需要赋值初始值才能够找到这个属性
+    // 所以我们需要一个公用的标识该属性的装饰器，这个装饰器用于标识对象的属性，这样实例化的时候就可以给对象的属性赋值
+    // 这样也可以做到属性注入
     // if (paramIndex !== undefined) {
     //   let propertyFieldMetadata =
     //     (Reflect.getMetadata(
