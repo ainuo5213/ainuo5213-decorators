@@ -13,6 +13,11 @@ import { ClassStruct } from '../types'
 import { AbstractContainer, ServiceValue, Lifecycle } from './types'
 
 export class Container extends AbstractContainer {
+  protected services: Map<ServiceKey, ServiceValue> = new Map()
+  constructor(services: Map<ServiceKey, ServiceValue>) {
+    super()
+    this.services = services
+  }
   private concurrentServices: Map<ServiceKey, ServiceValue> = new Map()
   dispose(): void {
     // 释放操作，transiant每次都是新的，所以不用释放，singleton全程只有一个也不用释放，所以仅需要释放scoped

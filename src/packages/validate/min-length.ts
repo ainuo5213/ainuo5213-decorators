@@ -22,10 +22,10 @@ export class MinLengthValidationFilter extends AbstractValidationFilter {
 }
 
 const validateMetadataNameValue = 'MinLength'
-export const MinLength = (
+function MinLength(
   minLength: number = 0,
   message: string = ''
-): PropertyDecorator | ParameterDecorator => {
+): PropertyDecorator | ParameterDecorator {
   const validation = Reflect.construct(MinLengthValidationFilter, [
     minLength,
     message
@@ -36,3 +36,12 @@ export const MinLength = (
     (type) => type === String
   )
 }
+
+export const PropMinLength = MinLength as (
+  minLength: number,
+  message?: string
+) => PropertyDecorator
+export const ParamMinLength = MinLength as (
+  minLength: number,
+  message?: string
+) => ParameterDecorator

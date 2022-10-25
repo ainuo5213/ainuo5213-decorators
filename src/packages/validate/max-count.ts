@@ -15,21 +15,21 @@ import {
 } from '../../core/validate'
 
 export class MaxCountValidationFilter extends AbstractValidationFilter {
-  public readonly minCount: number = 0
-  constructor(minCount: number = 0, errorMessage: string = '') {
+  public readonly maxCount: number = 0
+  constructor(maxCount: number = 0, errorMessage: string = '') {
     super(errorMessage)
-    this.minCount = minCount
+    this.maxCount = maxCount
   }
   validate(data: Array<unknown>): boolean {
-    return data.length <= this.minCount
+    return data.length <= this.maxCount
   }
 }
 
 const validateMetadataNameValue = 'MaxCount'
-export const MaxCount = (
+function MaxCount(
   minCount: number = 0,
   message: string = ''
-): PropertyDecorator => {
+): PropertyDecorator | ParameterDecorator {
   const validation = Reflect.construct(MaxCountValidationFilter, [
     minCount,
     message
@@ -40,3 +40,12 @@ export const MaxCount = (
     (type) => type === Array
   )
 }
+
+export const PropMaxCount = MaxCount as (
+  maxCount: number,
+  message?: string
+) => PropertyDecorator
+export const ParamMaxCount = MaxCount as (
+  maxCount: number,
+  message?: string
+) => ParameterDecorator

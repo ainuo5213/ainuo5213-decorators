@@ -1,10 +1,6 @@
 import { ClassStruct, IDisposed } from '../types'
 
 export abstract class AbstractContainer implements IDisposed {
-  protected services: Map<ServiceKey, ServiceValue> = new Map()
-  constructor(services: Map<ServiceKey, ServiceValue>) {
-    this.services = services
-  }
   abstract dispose(): void
   abstract resolve<T>(key: string): T
   abstract resolve<T>(constuctor: ClassStruct): T

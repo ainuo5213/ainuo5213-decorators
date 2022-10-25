@@ -33,10 +33,10 @@ export class RegularValidationFilter extends AbstractValidationFilter {
 
 const validateMetadataNameValue = 'Regular'
 
-export const Regular = (
+function Regular(
   regExp: RegExp,
   message: string = ''
-): PropertyDecorator | ParameterDecorator => {
+): PropertyDecorator | ParameterDecorator {
   const validation = Reflect.construct(RegularValidationFilter, [
     regExp,
     message
@@ -47,3 +47,12 @@ export const Regular = (
     (type) => type === String
   )
 }
+
+export const PropRegular = Regular as (
+  regExp: RegExp,
+  message?: string
+) => PropertyDecorator
+export const ParamRegular = Regular as (
+  regExp: RegExp,
+  message?: string
+) => ParameterDecorator

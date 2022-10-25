@@ -15,6 +15,7 @@ import {
   Parameter,
   ResolvedParameter
 } from '../../core/parameter'
+import { ICollected } from '../../core/types'
 
 export const Body = generateParameterDecorator('body', false)
 
@@ -22,7 +23,8 @@ export class BodyParameterResolver extends AbstractParameterResolver {
   parameterFrom: string = 'body'
   resolveParameter(
     req: IncomingMessage,
-    parameter: Parameter
+    parameter: Parameter,
+    info: ICollected
   ): Promise<ResolvedParameter> {
     return new Promise((resolve, reject) => {
       let postBodyString = ''
@@ -32,9 +34,20 @@ export class BodyParameterResolver extends AbstractParameterResolver {
       }
       const onEnd = () => {
         const parmasObject = JSON.parse(postBodyString)
+
+        const instance = Reflect.construct(parameter.paramType as Function, [])
+
+        Reflect.ownKeys(instance).forEach((r) => {
+          const queryObjectItem = parmasObject[r as string]
+          if (queryObjectItem !== undefined) {
+            instance[r] = queryObjectItem
+          }
+        })
+        console.log(parmasObject, instance)
+
         resolve({
           parameterIndex: parameter.index,
-          parameterValue: parmasObject,
+          parameterValue: instance,
           parameterFrom: parameter.paramFrom
         })
       }

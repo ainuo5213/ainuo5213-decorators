@@ -12,23 +12,25 @@ import { BaseController } from '../src/core/controller'
 import { Controller } from '../src/packages/controller/controller'
 import { ModelQuery, Query } from '../src/packages/parameter/query'
 import { Get } from '../src/packages/route/get'
+import { Post } from '../src/packages/route/post'
 import { ToyService } from './toy.service'
-import { MaxLength } from '../src/packages/validate/max-length'
+import { Body } from '../src/packages/parameter/body'
+import { UserDTO } from './UserDTO'
 
 @Controller('/toy')
 export class ToyController extends BaseController {
   constructor(private toyService: ToyService) {
     super()
   }
-  @Get('/list')
-  async userList(@MaxLength(10, 'asdasd') @Query('id') id: string) {
+  @Post('/list')
+  async userList(@Body() userDTO: UserDTO) {
     const result = this.toyService.getObj()
 
     // console.log(this.toyService!.getObj())
     return {
       // id,
       result,
-      id
+      userDTO
       // success: true,
       // code: 10000,
       // id,

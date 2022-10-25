@@ -14,9 +14,9 @@ export class RequiredValidationFilter extends AbstractValidationFilter {
 
 const validateMetadataNameValue = 'Required'
 
-export const Required = (
+function Required(
   message: string = ''
-): PropertyDecorator | ParameterDecorator => {
+): PropertyDecorator | ParameterDecorator {
   const validation = Reflect.construct(RequiredValidationFilter, [message])
   return defineValidationMetadata(
     validation,
@@ -24,3 +24,8 @@ export const Required = (
     (type) => type === String
   )
 }
+
+export const PropRequired = Required as (message?: string) => PropertyDecorator
+export const ParamRequired = Required as (
+  message?: string
+) => ParameterDecorator

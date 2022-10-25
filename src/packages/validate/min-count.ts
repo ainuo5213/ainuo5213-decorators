@@ -16,10 +16,10 @@ export class MinCountValidationFilter extends AbstractValidationFilter {
 }
 
 const validateMetadataNameValue = 'MinCount'
-export const MinCount = (
+function MinCount(
   minCount: number = 0,
   message: string = ''
-): PropertyDecorator | ParameterDecorator => {
+): PropertyDecorator | ParameterDecorator {
   const validation = Reflect.construct(MinCountValidationFilter, [
     minCount,
     message
@@ -30,3 +30,12 @@ export const MinCount = (
     (type) => type === Array
   )
 }
+
+export const PropMinCount = MinCount as (
+  minCount: number,
+  message?: string
+) => PropertyDecorator
+export const ParamMinCount = MinCount as (
+  minCount: number,
+  message?: string
+) => ParameterDecorator

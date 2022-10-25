@@ -22,10 +22,10 @@ export class MaxLengthValidationFilter extends AbstractValidationFilter {
 }
 
 const validateMetadataNameValue = 'MaxLength'
-export const MaxLength = (
+function MaxLength(
   maxLength: number = 0,
   message: string = ''
-): PropertyDecorator | ParameterDecorator => {
+): PropertyDecorator | ParameterDecorator {
   const validation = Reflect.construct(MaxLengthValidationFilter, [
     maxLength,
     message
@@ -36,3 +36,12 @@ export const MaxLength = (
     (type) => type === String
   )
 }
+
+export const PropMaxLength = MaxLength as (
+  maxLength: number,
+  message?: string
+) => PropertyDecorator
+export const ParamMaxLength = MaxLength as (
+  maxLength: number,
+  message?: string
+) => ParameterDecorator

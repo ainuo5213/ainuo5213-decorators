@@ -18,6 +18,11 @@ export abstract class AbstractValidationFilter {
 
 export const validateMetadataKey = 'parameter-validation'
 export const validateMetadataName = 'parameter-validation-name'
+export const validateMetadataProperty = 'parameter-validation-property'
+export type ValidateMetadataProperty = {
+  propertyName: string
+  propertyType: unknown
+}
 
 export type ValidateResult = {
   valid: boolean
@@ -58,6 +63,24 @@ export function defineValidationMetadata(
     if (!validationNames.includes(validateMetadataNameValue)) {
       validationNames.unshift(validateMetadataNameValue)
     }
+    // 定义对象的字段
+    // if (paramIndex !== undefined) {
+    //   let propertyFieldMetadata =
+    //     (Reflect.getMetadata(
+    //       validateMetadataProperty,
+    //       target
+    //     ) as ValidateMetadataProperty[]) || []
+    //   propertyFieldMetadata.push({
+    //     propertyName: propKey as string,
+    //     propertyType: type
+    //   })
+
+    //   Reflect.defineMetadata(
+    //     validateMetadataProperty,
+    //     propertyFieldMetadata,
+    //     target
+    //   )
+    // }
 
     Reflect.defineMetadata(
       validateMetadataName,

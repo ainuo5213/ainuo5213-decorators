@@ -1,7 +1,7 @@
-import { Range } from '../src/packages/validate/range'
-import { MaxLength } from '../src/packages/validate/max-length'
+import { PropMaxCount } from '../src/packages/validate/max-count'
+import { PropRange } from '../src/packages/validate/range'
 
 export class UserDTO {
-  @MaxLength(5, 10, '长度最小为5，最大为10')
-  id: string
+  @PropRange(1, 5, 'asdasdas')
+  id: string = ''
 }

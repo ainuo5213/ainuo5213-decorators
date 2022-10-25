@@ -63,6 +63,8 @@ export class ModelQueryParameterResolver extends AbstractParameterResolver {
         instance[r] = queryObjectItem
       }
     })
+    console.log(instance, parameter.paramType)
+
     return {
       parameterValue: instance,
       parameterIndex: parameter.index,

@@ -459,8 +459,6 @@ export default class Server<T extends Function = Function> {
     info: ICollected,
     parameter: Parameter
   ): ValidateResult {
-    console.log(object)
-    // Reflect.getMetadata(validateMetadataKey, object as Object)
     // 对象的情况
     if (typeof object === 'object' && !Array.isArray(object)) {
       return this.validateObjectParameter(
@@ -469,25 +467,12 @@ export default class Server<T extends Function = Function> {
         info,
         parameter
       )
-    } else if (Array.isArray(object)) {
-      return {
-        valid: true,
-        errorMessage: ''
-      }
-      // return this.validateArrayParameter(object)
     } else {
       return this.validatePrimativeParameter(
         object,
         controllerInstance,
         info,
         parameter
-      )
-      console.log(
-        Reflect.getMetadata(
-          validateMetadataKey,
-          controllerInstance,
-          `${info.requestHandler.name as string}.${0}.${'MaxLength'}`
-        )
       )
     }
   }
@@ -549,6 +534,7 @@ export default class Server<T extends Function = Function> {
           object,
           key
         ) as string[] | undefined
+
         if (!metadataNameValue || metadataNameValue.length === 0) {
           continue
         }
@@ -561,6 +547,7 @@ export default class Server<T extends Function = Function> {
               | undefined
           })
           .filter((r) => r !== undefined) as AbstractValidationFilter[]
+
         const inValidValidationResult = validationFilters
           .map((r) => {
             return {

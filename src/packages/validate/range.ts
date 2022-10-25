@@ -22,11 +22,11 @@ export class RangeValidationFi1lter extends AbstractValidationFilter {
 
 const validateMetadataNameValue = 'Range'
 
-export const Range = (
+function Range(
   minLength: number,
   maxLength: number,
   message: string = ''
-): PropertyDecorator | ParameterDecorator => {
+): PropertyDecorator | ParameterDecorator {
   const validation = Reflect.construct(RangeValidationFi1lter, [
     minLength,
     maxLength,
@@ -34,3 +34,14 @@ export const Range = (
   ])
   return defineValidationMetadata(validation, validateMetadataNameValue)
 }
+
+export const PropRange = Range as (
+  minLength: number,
+  maxLength: number,
+  message?: string
+) => PropertyDecorator
+export const ParamRange = Range as (
+  minLength: number,
+  maxLength: number,
+  message?: string
+) => ParameterDecorator
