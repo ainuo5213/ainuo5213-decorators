@@ -2,7 +2,7 @@
  * @Author: 孙永刚 1660998482@qq.com
  * @Date: 2022-10-15 17:10:48
  * @LastEditors: 孙永刚 1660998482@qq.com
- * @LastEditTime: 2022-10-22 21:15:20
+ * @LastEditTime: 2022-10-28 20:36:47
  * @FilePath: \ainuo5213-decorators\src\packages\parameter\query.ts
  * @Description: Query装饰器
  *
@@ -63,7 +63,6 @@ export class ModelQueryParameterResolver extends AbstractParameterResolver {
         instance[r] = queryObjectItem
       }
     })
-    console.log(instance, parameter.paramType)
 
     return {
       parameterValue: instance,

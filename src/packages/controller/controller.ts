@@ -2,7 +2,7 @@
  * @Author: 孙永刚 1660998482@qq.com
  * @Date: 2022-10-16 09:30:45
  * @LastEditors: 孙永刚 1660998482@qq.com
- * @LastEditTime: 2022-10-16 10:17:47
+ * @LastEditTime: 2022-10-28 20:48:03
  * @FilePath: \ainuo5213-decorators\src\packages\controller\controller.ts
  * @Description:
  *

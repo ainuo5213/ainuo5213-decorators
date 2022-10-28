@@ -2,7 +2,7 @@
  * @Author: 孙永刚 1660998482@qq.com
  * @Date: 2022-10-15 17:01:04
  * @LastEditors: 孙永刚 1660998482@qq.com
- * @LastEditTime: 2022-10-25 22:10:41
+ * @LastEditTime: 2022-10-28 21:36:40
  * @FilePath: \ainuo5213-decorators\src\core\controller\index.ts
  * @Description:
  *
@@ -15,6 +15,7 @@ import {
 } from '../dependency-injection/autowired'
 import {
   AbstractServiceProviderFactory,
+  Lifecycle,
   ServiceValue
 } from '../dependency-injection/types'
 import { MiddlewareType } from '../middleware'
@@ -67,37 +68,16 @@ export class BaseControllerResolver {
     middlewares: MiddlewareType[] = []
   ): ICollected[] {
     const prototype = controller.prototype
-
+    const controllerDepdencies = this.getControllerDependencies(controller)
+    const controllerMiddleware =
+      (Reflect.getMetadata('middleware', controller) as
+        | MiddlewareType[]
+        | undefined) || []
     // 获取构造函数的path元数据
     const rootPath = Reflect.getMetadata(
       'path',
       prototype.constructor
     ) as string
-
-    const controllerMiddleware =
-      (Reflect.getMetadata('middlware', prototype.constructor) as
-        | MiddlewareType[]
-        | undefined) || []
-
-    // 读取构造函数的参数
-    const ctorParams =
-      (Reflect.getMetadata('design:paramtypes', controller) as
-        | ClassStruct[]
-        | undefined) || []
-
-    // 读取属性注入的参数
-    const propertyParams =
-      (Reflect.getMetadata(autowiredMetadataPropKey, prototype) as
-        | AutowiredMetadata[]
-        | undefined) || []
-
-    const ctorDependencies = this.resolveConstructorDependencies(ctorParams)
-    const propDependencies = this.resolvePropertyDependencies(propertyParams)
-    // 合并依赖
-    const dependencies = this.mergeDependencies(
-      ctorDependencies,
-      propDependencies
-    )
 
     // 获取非构造函数的方法
     const methods = Reflect.ownKeys(prototype).filter(
@@ -143,6 +123,14 @@ export class BaseControllerResolver {
         }
       })
 
+      // 得到中间件的依赖项，并注入
+      const middlewareDependencies =
+        this.getMiddlewareDependencies(resultMiddlewares)
+      const resultDependencies = this.mergeDependencies(
+        controllerDepdencies,
+        middlewareDependencies
+      )
+
       // 解析函数参数的装饰器
       const parameters = this.resolveParameters(controller, requestHandler)
       collected.push({
@@ -152,11 +140,67 @@ export class BaseControllerResolver {
         requestHandlerParameters: parameters,
         middlewares: resultMiddlewares,
         requestController: controller,
-        dependencies: dependencies
+        dependencies: resultDependencies
       } as ICollected)
     }
 
     return collected
+  }
+  getControllerDependencies(controller: Function) {
+    // 合并依赖
+    const dependencies = this.getDependencies(controller)
+
+    const controllerDependencies: Map<string, ServiceValue> = new Map()
+
+    controllerDependencies.set(controller.name, {
+      dependencies: dependencies,
+      constructor: controller,
+      option: {
+        lifecycle: Lifecycle.transiant
+      },
+      resolveType: 'combination'
+    })
+
+    return controllerDependencies
+  }
+  getMiddlewareDependencies(middlewares: MiddlewareType[]) {
+    const middlewareDependencies: Map<string, ServiceValue> = new Map()
+    middlewares.forEach((r) => {
+      const dependencies = this.getDependencies(r)
+
+      middlewareDependencies.set(r.name, {
+        dependencies: dependencies,
+        constructor: r,
+        option: {
+          lifecycle: Lifecycle.transiant
+        },
+        resolveType: 'combination'
+      })
+    })
+    return middlewareDependencies
+  }
+  getDependencies(item: Function) {
+    console.log(item)
+
+    const ctorParams =
+      (Reflect.getMetadata('design:paramtypes', item) as
+        | ClassStruct[]
+        | undefined) || []
+
+    // 读取属性注入的参数
+    const propertyParams =
+      (Reflect.getMetadata(autowiredMetadataPropKey, item.prototype) as
+        | AutowiredMetadata[]
+        | undefined) || []
+    const ctorDependencies = this.resolveConstructorDependencies(ctorParams)
+    const propDependencies = this.resolvePropertyDependencies(propertyParams)
+
+    // 合并依赖
+    const dependencies = this.mergeDependencies(
+      ctorDependencies,
+      propDependencies
+    )
+    return dependencies
   }
   mergeDependencies(
     ctorDependencies: Map<string, ServiceValue<any>>,
@@ -184,7 +228,6 @@ export class BaseControllerResolver {
         AbstractServiceProviderFactory.__flag,
         param
       ) as ServiceValue | undefined
-      console.log(injectedDependencyValue)
 
       if (!injectedDependencyValue) {
         throw new Error(`${param.name}'s dependency is not injected`)

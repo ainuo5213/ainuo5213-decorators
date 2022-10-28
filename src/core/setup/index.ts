@@ -323,11 +323,9 @@ export default class Server<T extends Function = Function> {
       const next = async () => {
         const middleware = info.middlewares.shift()
         if (middleware) {
-          const middlewareInstance = Reflect.construct(
-            middleware as Function,
-            []
+          const middlewareInstance = this.container.resolve(
+            middleware.name
           ) as AbstractMiddleware
-
           try {
             const result = await Promise.resolve(
               middlewareInstance.use(req, res, next)
@@ -355,7 +353,9 @@ export default class Server<T extends Function = Function> {
     res: http.ServerResponse,
     info: ICollected
   ) {
-    const instance = this.getControllerInstance(info)
+    const instance: BaseController = this.container.resolve(
+      info.requestController.name
+    )
     // 处理参数
     const parameters = await this.getInjectedParameter(req, res, info, instance)
     if (!Array.isArray(parameters) && !parameters.valid) {
@@ -384,40 +384,6 @@ export default class Server<T extends Function = Function> {
         this.container.dispose()
         res.end(JSON.stringify(data))
       })
-  }
-
-  private getControllerInstance(info: ICollected) {
-    const params: ClassStruct[] = []
-
-    // 对于构造函数注入的需要提前初始化其依赖
-    const propertyInstances: {
-      propKey: string
-      instance: ClassStruct
-    }[] = []
-    info.dependencies.forEach((dep) => {
-      const depInstance = this.container.resolve<ClassStruct>(
-        dep.constructor.name
-      )
-      if (dep.resolveType === 'constructor') {
-        params.push(depInstance)
-      } else {
-        propertyInstances.push({
-          propKey: dep.propKey!,
-          instance: depInstance
-        })
-      }
-    })
-
-    const instance: BaseController = Reflect.construct(
-      info.requestController,
-      params
-    )
-
-    propertyInstances.forEach((r) => {
-      ;(instance as any)[r.propKey] = r.instance
-    })
-
-    return instance
   }
 
   private async getInjectedParameter(

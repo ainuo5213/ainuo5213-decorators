@@ -2,7 +2,7 @@
  * @Author: 孙永刚 1660998482@qq.com
  * @Date: 2022-10-15 17:01:04
  * @LastEditors: 孙永刚 1660998482@qq.com
- * @LastEditTime: 2022-10-25 22:30:29
+ * @LastEditTime: 2022-10-28 21:37:11
  * @FilePath: \ainuo5213-decorators\sample\toy.controller.ts
  * @Description:
  *
@@ -17,17 +17,21 @@ import { ToyService } from './toy.service'
 import { Body } from '../src/packages/parameter/body'
 import { UserDTO } from './UserDTO'
 import { Autowired } from '../src/core/dependency-injection/autowired'
+import { InjectClassMiddleware } from '../src/packages/middleware'
+import { ControllerCorsMiddleware } from './CorsMiddleware'
 
+@InjectClassMiddleware(ControllerCorsMiddleware)
 @Controller('/toy')
 export class ToyController extends BaseController {
-  @Autowired()
-  toyService: ToyService
+  constructor(private toyService: ToyService) {
+    super()
+  }
   @Post('/list')
   async userList(@Body() userDTO: UserDTO) {
-    const result = this.toyService.getObj()
+    // const result = this.toyService.getObj()
     return {
       // id,
-      result,
+      result: 1111,
       userDTO
       // success: true,
       // code: 10000,

@@ -3,7 +3,7 @@ import { ServiceKey } from './types'
  * @Author: 孙永刚 1660998482@qq.com
  * @Date: 2022-10-22 07:19:13
  * @LastEditors: 孙永刚 1660998482@qq.com
- * @LastEditTime: 2022-10-25 22:27:29
+ * @LastEditTime: 2022-10-28 20:58:50
  * @FilePath: \ainuo5213-decorators\src\core\dependency-injection\container.ts
  * @Description:
  *
@@ -33,7 +33,6 @@ export class Container extends AbstractContainer {
     let serviceValue: ServiceValue | undefined = this.services.get(
       constuctor as ClassStruct | string
     )
-
     if (!serviceValue) {
       throw new Error('service is not register')
     }
@@ -82,9 +81,34 @@ export class Container extends AbstractContainer {
   private resolveInstance<T>(serviceValue: ServiceValue): T {
     if (serviceValue.resolveType === 'constructor') {
       return this.resolveConstructorInstance(serviceValue)
-    } else {
+    } else if (serviceValue.resolveType === 'property') {
       return this.resolvePropertyInstance(serviceValue)
+    } else {
+      return this.resolveCombinationInstance(serviceValue)
     }
+  }
+
+  private resolveCombinationInstance<T>(serviceValue: ServiceValue): T {
+    const properties: Array<{ propKey: string; instance: ClassStruct }> = []
+    const ctors: ClassStruct[] = []
+    serviceValue.dependencies.forEach((dep) => {
+      const depInstance = this.resolveInstance<ClassStruct>(dep)
+      if (dep.resolveType === 'constructor') {
+        ctors.push(depInstance)
+      } else if (dep.resolveType === 'property') {
+        properties.push({
+          propKey: dep.propKey!,
+          instance: depInstance
+        })
+      }
+    })
+
+    const instance = Reflect.construct(serviceValue.constructor, ctors) as T
+    properties.forEach((r) => {
+      ;(instance as any)[r.propKey!] = r.instance
+    })
+
+    return instance
   }
 
   private resolvePropertyInstance<T>(serviceValue: ServiceValue): T {
@@ -103,6 +127,7 @@ export class Container extends AbstractContainer {
       const depInstance = this.resolveInstance<ClassStruct>(dep)
       params.push(depInstance)
     })
+
     const instance = Reflect.construct(serviceValue.constructor, params) as T
 
     return instance
