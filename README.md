@@ -2,7 +2,7 @@
  * @Author: 孙永刚 1660998482@qq.com
  * @Date: 2022-10-22 07:19:13
  * @LastEditors: 孙永刚 1660998482@qq.com
- * @LastEditTime: 2022-10-29 18:20:37
+ * @LastEditTime: 2022-10-29 20:26:38
  * @FilePath: \ainuo5213-decorators\README.md
  * @Description: 
  * 
@@ -14,7 +14,7 @@
 
 目前待实现功能：
 
-错误处理（ErrorCaptureHandler）：捕获程序运行的错误进行处理
+错误处理（ErrorCaptureHandler）：捕获程序运行的错误进行处理 已完成参数错误、运行错误统一控制
 
 身份认证校验（AuthorizeFilter）：在访问接口之前做的关于身份认证的过滤
 
