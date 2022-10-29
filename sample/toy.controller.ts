@@ -2,7 +2,7 @@
  * @Author: 孙永刚 1660998482@qq.com
  * @Date: 2022-10-15 17:01:04
  * @LastEditors: 孙永刚 1660998482@qq.com
- * @LastEditTime: 2022-10-28 21:37:11
+ * @LastEditTime: 2022-10-29 09:20:47
  * @FilePath: \ainuo5213-decorators\sample\toy.controller.ts
  * @Description:
  *
@@ -19,6 +19,8 @@ import { UserDTO } from './UserDTO'
 import { Autowired } from '../src/core/dependency-injection/autowired'
 import { InjectClassMiddleware } from '../src/packages/middleware'
 import { ControllerCorsMiddleware } from './CorsMiddleware'
+import { promises } from 'fs'
+import path from 'path'
 
 @InjectClassMiddleware(ControllerCorsMiddleware)
 @Controller('/toy')
@@ -29,23 +31,7 @@ export class ToyController extends BaseController {
   @Post('/list')
   async userList(@Body() userDTO: UserDTO) {
     // const result = this.toyService.getObj()
-    return {
-      // id,
-      result: 1111,
-      userDTO
-      // success: true,
-      // code: 10000,
-      // id,
-      // data: [
-      //   {
-      //     name: 'ainuo5213',
-      //     age: 18
-      //   },
-      //   {
-      //     name: '孙永刚',
-      //     age: 24
-      //   }
-      // ]
-    }
+    const result = await promises.readFile(path.join(__dirname, './test.jpg'))
+    return this.file(result, '美女.jpg')
   }
 }

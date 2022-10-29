@@ -8,7 +8,11 @@ import {
 import { BaseModuleResolver } from '../module'
 import { AbstractMiddleware } from '../middleware'
 import { MaybeNull } from '../module'
-import { BaseController, BaseControllerResolver } from '../controller'
+import {
+  BaseController,
+  BaseControllerResolver,
+  StatusCodeType
+} from '../controller'
 import {
   AbstractContainer,
   AbstractContainerBuilder,
@@ -318,7 +322,6 @@ export default class Server<T extends Function = Function> {
     res: http.ServerResponse,
     info: ICollected
   ) {
-    const context: Map<any, unknown> = new Map()
     if (info.middlewares.length) {
       const next = async () => {
         const middleware = info.middlewares.shift()
@@ -330,10 +333,6 @@ export default class Server<T extends Function = Function> {
             const result = await Promise.resolve(
               middlewareInstance.use(req, res, next)
             )
-            const { key, context: _context } =
-              middlewareInstance.getConfigContext()
-
-            context.set(key, _context)
             return result
           } catch (err) {
             return Promise.reject(err)
@@ -344,8 +343,6 @@ export default class Server<T extends Function = Function> {
       }
       await next()
     }
-
-    return context
   }
 
   private async handleRequest(
@@ -356,6 +353,7 @@ export default class Server<T extends Function = Function> {
     const instance: BaseController = this.container.resolve(
       info.requestController.name
     )
+
     // 处理参数
     const parameters = await this.getInjectedParameter(req, res, info, instance)
     if (!Array.isArray(parameters) && !parameters.valid) {
@@ -365,25 +363,28 @@ export default class Server<T extends Function = Function> {
       return
     }
 
-    const context: Map<any, unknown> = await this.invokeMiddleware(
-      req,
-      res,
-      info
-    )
+    await this.invokeMiddleware(req, res, info)
 
-    instance.context = context
-    info.requestHandler
-      .bind(instance)(
-        ...(parameters as ResolvedParameter[]).map((r) => {
+    const result = (await Promise.resolve(
+      info.requestHandler.apply(
+        instance,
+        (parameters as ResolvedParameter[]).map((r) => {
           return r.parameterValue
         })
       )
-      .then(async (data) => {
-        res.writeHead(200, { 'Content-Type': 'application/json' })
-        // 释放scoped生命周期的实例
-        this.container.dispose()
-        res.end(JSON.stringify(data))
-      })
+    )) as { statusCode: StatusCodeType; data: unknown }
+
+    res.statusCode = result.statusCode
+    const headers = instance.getResponseHeaders()
+    const headerObj: Record<string, string> = {}
+    headers.forEach((value: string, key: string) => {
+      headerObj[key] = value
+    })
+    res.writeHead(result.statusCode, headerObj)
+    res.end(result.data, () => {
+      // 释放scoped生命周期的实例
+      this.container.dispose()
+    })
   }
 
   private async getInjectedParameter(

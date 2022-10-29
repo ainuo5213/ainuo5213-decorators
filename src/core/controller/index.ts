@@ -2,7 +2,7 @@
  * @Author: 孙永刚 1660998482@qq.com
  * @Date: 2022-10-15 17:01:04
  * @LastEditors: 孙永刚 1660998482@qq.com
- * @LastEditTime: 2022-10-29 08:31:59
+ * @LastEditTime: 2022-10-29 09:22:55
  * @FilePath: \ainuo5213-decorators\src\core\controller\index.ts
  * @Description:
  *
@@ -23,17 +23,142 @@ import {
   DesignParamTypesMetadataKey,
   ICollected,
   MethodMetadataKey,
+  MiddlewareMetadataKey,
   PathMetadataKey
 } from '../types'
+import { extname } from 'path'
+
+export enum StatusCode {
+  NotFound = 404,
+  InternalError = 500,
+  NoContent = 204,
+  Moved = 301,
+  NotModified = 304,
+  BadRequest = 400,
+  Unauthorized = 401,
+  Forbidden = 403,
+  ServiceUnavilable = 503,
+  Success = 200
+}
+
+export type StatusCodeType = StatusCode
+
+export type JsonResult = {
+  data: string
+  statusCode: StatusCodeType
+}
+
+export type FileResult = {
+  data: Buffer
+  statusCode: StatusCodeType
+}
+
 export class BaseController {
-  private static context: any
   constructor(...args: any[]) {}
-  get context() {
-    return BaseController.context
+
+  private responseHeaders: Map<string, string> = new Map()
+  private requestHeaders: Map<string, string> = new Map()
+
+  setResponseHeader(key: string, value: string) {
+    this.responseHeaders.set(key, value)
+    return this
   }
 
-  set context(context: any) {
-    BaseController.context = context
+  getResponseHeaders() {
+    return this.responseHeaders
+  }
+
+  statusCode(result: { statusCode: StatusCodeType; data: unknown }) {
+    this.responseHeaders.set('Content-Type', 'application/json')
+    return {
+      statusCode: result.statusCode,
+      data: JSON.stringify(result.data)
+    } as JsonResult
+  }
+
+  notFound(data: unknown) {
+    return this.statusCode({
+      statusCode: StatusCode.NotFound,
+      data
+    })
+  }
+  internalError(data: unknown) {
+    return this.statusCode({
+      statusCode: StatusCode.InternalError,
+      data
+    })
+  }
+  noContent(data: unknown) {
+    return this.statusCode({
+      statusCode: StatusCode.NoContent,
+      data
+    })
+  }
+  moved(data: unknown) {
+    return this.statusCode({
+      statusCode: StatusCode.Moved,
+      data
+    })
+  }
+  notModified(data: unknown) {
+    return this.statusCode({
+      statusCode: StatusCode.NotModified,
+      data
+    })
+  }
+  badRequest(data: unknown) {
+    return this.statusCode({
+      statusCode: StatusCode.BadRequest,
+      data
+    })
+  }
+  unauthorized(data: unknown) {
+    return this.statusCode({
+      statusCode: StatusCode.Unauthorized,
+      data
+    })
+  }
+  forbidden(data: unknown) {
+    return this.statusCode({
+      statusCode: StatusCode.Forbidden,
+      data
+    })
+  }
+  serviceUnavilable(data: unknown) {
+    return this.statusCode({
+      statusCode: StatusCode.ServiceUnavilable,
+      data
+    })
+  }
+  success(data: unknown) {
+    return this.statusCode({
+      statusCode: StatusCode.Success,
+      data
+    })
+  }
+  file(data: Buffer, filename: string) {
+    const fileExtension = extname(filename)
+    let filenameWithoutExtension = ''
+    if (fileExtension) {
+      filenameWithoutExtension = filename.slice(0, fileExtension.length)
+    } else {
+      filenameWithoutExtension = filename
+    }
+    this.responseHeaders.set(
+      'Content-Disposition',
+      `attachment; filename=${encodeURIComponent(
+        filenameWithoutExtension
+      )}${fileExtension}`
+    )
+    this.responseHeaders.set(
+      'Access-Control-Expose-Headers',
+      'Content-Disposition'
+    )
+    this.responseHeaders.set('Content-Type', 'application/octet-stream')
+    return {
+      statusCode: StatusCode.Success,
+      data
+    } as FileResult
   }
 }
 
@@ -74,12 +199,12 @@ export class BaseControllerResolver {
     const prototype = controller.prototype
     const controllerDepdencies = this.getControllerDependencies(controller)
     const controllerMiddleware =
-      (Reflect.getMetadata('middleware', controller) as
+      (Reflect.getMetadata(MiddlewareMetadataKey, controller) as
         | MiddlewareType[]
         | undefined) || []
     // 获取构造函数的path元数据
     const rootPath = Reflect.getMetadata(
-      'path',
+      PathMetadataKey,
       prototype.constructor
     ) as string
 
@@ -110,9 +235,11 @@ export class BaseControllerResolver {
       }
 
       const routeMiddleware =
-        (Reflect.getMetadata('middleware', requestHandler, methodKey) as
-          | MiddlewareType[]
-          | undefined) || []
+        (Reflect.getMetadata(
+          MiddlewareMetadataKey,
+          requestHandler,
+          methodKey
+        ) as MiddlewareType[] | undefined) || []
       const tmpResultMiddlewares = middlewares.concat(
         controllerMiddleware,
         routeMiddleware
@@ -236,9 +363,10 @@ export class BaseControllerResolver {
         throw new Error(`${param.name}'s dependency is not injected`)
       }
 
-      const ctorParams = Reflect.getMetadata('design:paramtypes', param) as
-        | ClassStruct[]
-        | undefined
+      const ctorParams = Reflect.getMetadata(
+        DesignParamTypesMetadataKey,
+        param
+      ) as ClassStruct[] | undefined
 
       if (ctorParams && ctorParams.length > 0) {
         injectedDependencyValue.dependencies =
