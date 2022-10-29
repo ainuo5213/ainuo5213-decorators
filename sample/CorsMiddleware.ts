@@ -10,7 +10,7 @@ export class ControllerCorsMiddleware extends AbstractMiddleware {
   constructor() {
     super()
   }
-  use(req: IncomingMessage, res: ServerResponse, next: () => void) {
+  use(req: IncomingMessage, next: () => void) {
     console.log('ControllerCorsMiddleware', this.toyService.getObj())
     next()
   }

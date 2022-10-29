@@ -2,19 +2,21 @@
  * @Author: 孙永刚 1660998482@qq.com
  * @Date: 2022-10-15 17:42:11
  * @LastEditors: 孙永刚 1660998482@qq.com
- * @LastEditTime: 2022-10-29 08:33:01
+ * @LastEditTime: 2022-10-29 20:00:12
  * @FilePath: \ainuo5213-decorators\src\core\parameter\index.ts
  * @Description:
  *
  * Copyright (c) 2022 by 孙永刚 1660998482@qq.com, All Rights Reserved.
  */
-import { IncomingMessage } from 'http'
+import { IncomingMessage, ServerResponse } from 'http'
 import 'reflect-metadata'
 import {
+  AbstractHandler,
   ApiPropertyMetadataKey,
   DesignParamTypesMetadataKey,
   DesignTypeMetadataKey,
-  ICollected
+  ICollected,
+  ParameterInvalidateHandlerName
 } from '../types'
 
 export type AsyncFunc = (...args: any[]) => Promise<any>
@@ -142,4 +144,9 @@ export const ApiProperty = (): PropertyDecorator => {
 
     Reflect.defineMetadata(ApiPropertyMetadataKey, apiProperties, target)
   }
+}
+
+export abstract class AbstractParameterInValidateHandler extends AbstractHandler {
+  readonly __flag: Symbol = ParameterInvalidateHandlerName
+  abstract handle(res: ServerResponse, message: string): void
 }

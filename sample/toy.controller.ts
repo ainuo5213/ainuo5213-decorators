@@ -2,7 +2,7 @@
  * @Author: 孙永刚 1660998482@qq.com
  * @Date: 2022-10-15 17:01:04
  * @LastEditors: 孙永刚 1660998482@qq.com
- * @LastEditTime: 2022-10-29 18:16:09
+ * @LastEditTime: 2022-10-29 20:23:35
  * @FilePath: \ainuo5213-decorators\sample\toy.controller.ts
  * @Description:
  *
@@ -30,9 +30,8 @@ export class ToyController extends BaseController {
   }
   @Post('/list')
   async userList(@Body() userDTO: UserDTO) {
-    // const result = this.toyService.getObj()
-    throw new Error('xxxx')
-    const result = await promises.readFile(path.join(__dirname, './test.jpg'))
-    return 'xxxx'
+    const result = this.toyService.getObj()
+    // const result = await promises.readFile(path.join(__dirname, './test.jpg'))
+    return result
   }
 }

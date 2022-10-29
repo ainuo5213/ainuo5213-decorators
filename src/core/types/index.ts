@@ -1,3 +1,4 @@
+import { ServerResponse } from 'http'
 import { BaseController } from '../controller'
 import { ServiceValue } from '../dependency-injection/types'
 import { MiddlewareType } from '../middleware'
@@ -37,3 +38,10 @@ export const ApiPropertyMetadataKey = Symbol('api-property')
 export const ValidateMetadataKey = Symbol('parameter-validation')
 export const ValidateMetadataName = Symbol('parameter-validation-name')
 export const ValidateMetadataProperty = Symbol('parameter-validation-property')
+
+export const ParameterInvalidateHandlerName = Symbol('parameter-invalidate')
+export const ErrorCapturedHandlerName = Symbol('error-captured')
+export abstract class AbstractHandler {
+  abstract readonly __flag: Symbol
+  abstract handle(res: ServerResponse, ...args: any[]): void
+}

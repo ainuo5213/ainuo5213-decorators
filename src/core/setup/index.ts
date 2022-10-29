@@ -1,6 +1,17 @@
-import http, { IncomingMessage } from 'http'
+/*
+ * @Author: 孙永刚 1660998482@qq.com
+ * @Date: 2022-10-15 17:01:04
+ * @LastEditors: 孙永刚 1660998482@qq.com
+ * @LastEditTime: 2022-10-29 20:20:10
+ * @FilePath: \ainuo5213-decorators\src\core\setup\index.ts
+ * @Description:
+ *
+ * Copyright (c) 2022 by 孙永刚 1660998482@qq.com, All Rights Reserved.
+ */
+import http, { IncomingMessage, ServerResponse } from 'http'
 import { parse as parseUrl } from 'url'
 import {
+  AbstractParameterInValidateHandler,
   AbstractParameterResolver,
   Parameter,
   ResolvedParameter
@@ -18,9 +29,20 @@ import {
   AbstractContainerBuilder,
   AbstractServiceProviderFactory
 } from '../dependency-injection/types'
-import { ICollected, ValidateMetadataKey, ValidateMetadataName } from '../types'
+import {
+  AbstractHandler,
+  ErrorCapturedHandlerName,
+  ICollected,
+  ParameterInvalidateHandlerName,
+  ValidateMetadataKey,
+  ValidateMetadataName
+} from '../types'
 import { AbstractValidationFilter, ValidateResult } from '../validate'
-import { ErrorResult, ParameterInValidateResult } from '../error'
+import {
+  AbstractErrorHandler,
+  ErrorResult,
+  ParameterInValidateResult
+} from '../error'
 
 export type ParameterObjectType = {
   parameterValue: any
@@ -53,6 +75,7 @@ export default class Server<T extends Function = Function> {
   private serviceProviderFactory: MaybeNull<AbstractServiceProviderFactory> =
     null
   private container: AbstractContainer
+  private handlers: Map<Symbol, AbstractHandler> = new Map()
   private constructor(module: T) {
     if (!module) {
       throw new TypeError('injected module is nullable')
@@ -62,6 +85,21 @@ export default class Server<T extends Function = Function> {
       this.collectDependency(this.collected)
       this.container = this.serviceProviderFactory!.getBuilder().build()
     })
+  }
+
+  public useActionHandler(...handlers: AbstractHandler[]) {
+    const fn = () => {
+      handlers.forEach((r) => {
+        if (!this.handlers.has(r.__flag)) {
+          this.handlers.set(r.__flag, r)
+        }
+      })
+    }
+    this.useFunctionStack.push({
+      urgency: Urgency.LowestPriority,
+      invoke: fn
+    })
+    return this
   }
 
   public useModuleResolver(
@@ -140,21 +178,48 @@ export default class Server<T extends Function = Function> {
     http
       .createServer(async (req, res) => {
         const { isMatched, collectedInfo } = this.isMatch(req)
+        res.on('finish', () => {
+          this.container.dispose()
+        })
 
         if (isMatched) {
           try {
             await this.handleRequest(req, res, collectedInfo!)
+            return
           } catch (err) {
-            const error = err as Error
-            const errResult = new ErrorResult(error, collectedInfo!)
-            res.setHeader('Content-Type', 'application/json')
-            res.end(errResult.toString())
+            this.handleError(err, res, collectedInfo!)
+            return
           }
         } else {
           return res.end('not found')
         }
       })
       .listen(port)
+  }
+  private handleError(
+    err: unknown,
+    res: ServerResponse,
+    collectedInfo: ICollected
+  ) {
+    const errorCapturedHandler = this.handlers.get(
+      ErrorCapturedHandlerName
+    ) as AbstractErrorHandler
+    if (errorCapturedHandler) {
+      errorCapturedHandler.handle(res, err)
+    } else {
+      let errResult: ErrorResult
+      if (err instanceof Error) {
+        const error = err as Error
+        errResult = new ErrorResult(error, collectedInfo!)
+      } else {
+        errResult = new ErrorResult(
+          new Error(JSON.stringify(err)),
+          collectedInfo!
+        )
+      }
+      res.setHeader('Content-Type', 'application/json')
+      res.end(errResult.toString())
+    }
   }
 
   public static create(module: Function) {
@@ -320,11 +385,7 @@ export default class Server<T extends Function = Function> {
     return false
   }
 
-  private async invokeMiddleware(
-    req: http.IncomingMessage,
-    res: http.ServerResponse,
-    info: ICollected
-  ) {
+  private async invokeMiddleware(req: http.IncomingMessage, info: ICollected) {
     if (info.middlewares.length) {
       const next = async () => {
         const middleware = info.middlewares.shift()
@@ -334,7 +395,7 @@ export default class Server<T extends Function = Function> {
           ) as AbstractMiddleware
           try {
             const result = await Promise.resolve(
-              middlewareInstance.use(req, res, next)
+              middlewareInstance.use(req, next)
             )
             return result
           } catch (err) {
@@ -358,27 +419,29 @@ export default class Server<T extends Function = Function> {
     )
 
     // 处理参数
-    const parameters = await this.getInjectedParameter(req, res, info, instance)
+    const parameters = await this.getInjectedParameter(req, info, instance)
     if (!Array.isArray(parameters) && !parameters.valid) {
-      res.setHeader('Content-Type', 'application/json')
-      const result = new ParameterInValidateResult(
-        info,
-        parameters.errorMessage
-      )
-      res.end(result.toString())
+      this.handleParameterInValidate(res, info, parameters)
       return
     }
 
-    await this.invokeMiddleware(req, res, info)
+    await this.invokeMiddleware(req, info)
+    let result: unknown
 
-    const result = await Promise.resolve(
-      info.requestHandler.apply(
-        instance,
-        (parameters as ResolvedParameter[]).map((r) => {
-          return r.parameterValue
-        })
+    try {
+      result = await Promise.resolve(
+        info.requestHandler.apply(
+          instance,
+          (parameters as ResolvedParameter[]).map((r) => {
+            return r.parameterValue
+          })
+        )
       )
-    )
+    } catch (err) {
+      this.handleError(err, res, info)
+      return
+    }
+
     if (!(result instanceof ControllerResult)) {
       throw new Error(
         `${info.requestHandler.name} return value is not instanceof ${ControllerResult.name}`
@@ -392,15 +455,30 @@ export default class Server<T extends Function = Function> {
       headerObj[key] = value
     })
     res.writeHead(result.statusCode, headerObj)
-    res.end(result.data, () => {
-      // 释放scoped生命周期的实例
-      this.container.dispose()
-    })
+    res.end(result.data)
+  }
+  private handleParameterInValidate(
+    res: ServerResponse,
+    info: ICollected,
+    valiadteResult: ValidateResult
+  ) {
+    const parameterInValidateHandler = this.handlers.get(
+      ParameterInvalidateHandlerName
+    ) as AbstractParameterInValidateHandler
+    if (parameterInValidateHandler) {
+      parameterInValidateHandler.handle(res, valiadteResult.errorMessage)
+    } else {
+      res.setHeader('Content-Type', 'application/json')
+      const result = new ParameterInValidateResult(
+        info,
+        valiadteResult.errorMessage
+      )
+      res.end(result.toString())
+    }
   }
 
   private async getInjectedParameter(
     req: http.IncomingMessage,
-    res: http.ServerResponse,
     info: ICollected,
     controllerInstance: BaseController
   ): Promise<ResolvedParameter[] | ValidateResult> {
