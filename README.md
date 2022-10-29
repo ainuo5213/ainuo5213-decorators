@@ -2,7 +2,7 @@
  * @Author: 孙永刚 1660998482@qq.com
  * @Date: 2022-10-22 07:19:13
  * @LastEditors: 孙永刚 1660998482@qq.com
- * @LastEditTime: 2022-10-22 21:12:03
+ * @LastEditTime: 2022-10-29 18:20:37
  * @FilePath: \ainuo5213-decorators\README.md
  * @Description: 
  * 
@@ -18,8 +18,8 @@
 
 身份认证校验（AuthorizeFilter）：在访问接口之前做的关于身份认证的过滤
 
-参数验证 35%
+参数验证 90%
 
 参数验证统一结果配置
 
-BaseController 原生的关于 statusCode 的方法
+BaseController 原生的关于 statusCode 的方法 已完成常用的方法
