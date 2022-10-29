@@ -2,17 +2,14 @@
  * @Author: 孙永刚 1660998482@qq.com
  * @Date: 2022-10-15 17:01:04
  * @LastEditors: 孙永刚 1660998482@qq.com
- * @LastEditTime: 2022-10-28 21:36:40
+ * @LastEditTime: 2022-10-29 08:31:59
  * @FilePath: \ainuo5213-decorators\src\core\controller\index.ts
  * @Description:
  *
  * Copyright (c) 2022 by 孙永刚 1660998482@qq.com, All Rights Reserved.
  */
 import 'reflect-metadata'
-import {
-  AutowiredMetadata,
-  autowiredMetadataPropKey
-} from '../dependency-injection/autowired'
+import { AutowiredMetadata } from '../dependency-injection/autowired'
 import {
   AbstractServiceProviderFactory,
   Lifecycle,
@@ -20,7 +17,14 @@ import {
 } from '../dependency-injection/types'
 import { MiddlewareType } from '../middleware'
 import { AbstractParameterResolver, AsyncFunc, Parameter } from '../parameter'
-import { ClassStruct, ICollected } from '../types'
+import {
+  AutowiredMetadataPropKey,
+  ClassStruct,
+  DesignParamTypesMetadataKey,
+  ICollected,
+  MethodMetadataKey,
+  PathMetadataKey
+} from '../types'
 export class BaseController {
   private static context: any
   constructor(...args: any[]) {}
@@ -91,14 +95,15 @@ export class BaseControllerResolver {
       const requestHandler = prototype[methodKey]
 
       // 获取方法的path元数据
-      const path = Reflect.getMetadata('path', requestHandler) as
+      const path = Reflect.getMetadata(PathMetadataKey, requestHandler) as
         | string
         | undefined
 
       // 获取方法上请求方法的元数据
-      const requestMethod = Reflect.getMetadata('method', requestHandler) as
-        | string
-        | undefined
+      const requestMethod = Reflect.getMetadata(
+        MethodMetadataKey,
+        requestHandler
+      ) as string | undefined
 
       if (!path || !requestMethod) {
         continue
@@ -180,16 +185,14 @@ export class BaseControllerResolver {
     return middlewareDependencies
   }
   getDependencies(item: Function) {
-    console.log(item)
-
     const ctorParams =
-      (Reflect.getMetadata('design:paramtypes', item) as
+      (Reflect.getMetadata(DesignParamTypesMetadataKey, item) as
         | ClassStruct[]
         | undefined) || []
 
     // 读取属性注入的参数
     const propertyParams =
-      (Reflect.getMetadata(autowiredMetadataPropKey, item.prototype) as
+      (Reflect.getMetadata(AutowiredMetadataPropKey, item.prototype) as
         | AutowiredMetadata[]
         | undefined) || []
     const ctorDependencies = this.resolveConstructorDependencies(ctorParams)
@@ -268,7 +271,7 @@ export class BaseControllerResolver {
       }
 
       const propertyParams =
-        (Reflect.getMetadata(autowiredMetadataPropKey, propType.prototype) as
+        (Reflect.getMetadata(AutowiredMetadataPropKey, propType.prototype) as
           | AutowiredMetadata[]
           | undefined) || []
       if (propertyParams && propertyParams.length > 0) {

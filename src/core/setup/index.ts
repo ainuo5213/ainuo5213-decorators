@@ -14,13 +14,13 @@ import {
   AbstractContainerBuilder,
   AbstractServiceProviderFactory
 } from '../dependency-injection/types'
-import { ClassStruct, ICollected } from '../types'
 import {
-  AbstractValidationFilter,
-  validateMetadataKey,
-  validateMetadataName,
-  ValidateResult
-} from '../validate'
+  ClassStruct,
+  ICollected,
+  ValidateMetadataKey,
+  ValidateMetadataName
+} from '../types'
+import { AbstractValidationFilter, ValidateResult } from '../validate'
 
 export type ParameterObjectType = {
   parameterValue: any
@@ -467,7 +467,7 @@ export default class Server<T extends Function = Function> {
     parameter: Parameter
   ) {
     const metadataNameValue = Reflect.getMetadata(
-      validateMetadataName,
+      ValidateMetadataName,
       controllerInstance,
       `${info.requestHandler.name}.${parameter.index}`
     ) as string[] | undefined
@@ -482,7 +482,7 @@ export default class Server<T extends Function = Function> {
       .map((r) => `${info.requestHandler.name}.${parameter.index}.${r}`)
       .map((r) => {
         return Reflect.getMetadata(
-          validateMetadataKey,
+          ValidateMetadataKey,
           controllerInstance,
           r
         ) as AbstractValidationFilter | undefined
@@ -513,7 +513,7 @@ export default class Server<T extends Function = Function> {
     for (const key in object) {
       if (Object.prototype.hasOwnProperty.call(object, key)) {
         const metadataNameValue = Reflect.getMetadata(
-          validateMetadataName,
+          ValidateMetadataName,
           object,
           key
         ) as string[] | undefined
@@ -525,7 +525,7 @@ export default class Server<T extends Function = Function> {
         const validationFilters = metadataNameValue
           .map((r) => `${key}.${r}`)
           .map((r) => {
-            return Reflect.getMetadata(validateMetadataKey, object, r) as
+            return Reflect.getMetadata(ValidateMetadataKey, object, r) as
               | AbstractValidationFilter
               | undefined
           })

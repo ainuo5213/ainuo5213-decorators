@@ -1,5 +1,6 @@
 import 'reflect-metadata'
-export const autowiredMetadataPropKey = Symbol('autowired-metadata-prop-key')
+import { AutowiredMetadataPropKey } from '../types'
+
 export type AutowiredMetadata = {
   autowiredKey: string
   autowiredType: Function
@@ -17,13 +18,13 @@ export const Autowired = (): PropertyDecorator => {
       autowiredType: propType
     }
     const apiProperties =
-      (Reflect.getMetadata(autowiredMetadataPropKey, target) as
+      (Reflect.getMetadata(AutowiredMetadataPropKey, target) as
         | AutowiredMetadata[]
         | undefined) || []
     if (apiProperties.findIndex((r) => r.autowiredKey === propKey) === -1) {
       apiProperties.push(property)
     }
 
-    Reflect.defineMetadata(autowiredMetadataPropKey, apiProperties, target)
+    Reflect.defineMetadata(AutowiredMetadataPropKey, apiProperties, target)
   }
 }

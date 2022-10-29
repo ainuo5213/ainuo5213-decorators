@@ -3,7 +3,7 @@ import { ServiceKey } from './types'
  * @Author: 孙永刚 1660998482@qq.com
  * @Date: 2022-10-22 07:19:13
  * @LastEditors: 孙永刚 1660998482@qq.com
- * @LastEditTime: 2022-10-28 20:58:50
+ * @LastEditTime: 2022-10-29 08:32:17
  * @FilePath: \ainuo5213-decorators\src\core\dependency-injection\container.ts
  * @Description:
  *
@@ -11,7 +11,6 @@ import { ServiceKey } from './types'
  */
 import { ClassStruct } from '../types'
 import { AbstractContainer, ServiceValue, Lifecycle } from './types'
-import { autowiredMetadataPropKey } from './autowired'
 
 export class Container extends AbstractContainer {
   protected services: Map<ServiceKey, ServiceValue> = new Map()

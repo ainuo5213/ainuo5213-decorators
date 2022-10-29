@@ -2,7 +2,7 @@
  * @Author: 孙永刚 1660998482@qq.com
  * @Date: 2022-10-15 17:42:11
  * @LastEditors: 孙永刚 1660998482@qq.com
- * @LastEditTime: 2022-10-25 21:31:09
+ * @LastEditTime: 2022-10-29 08:33:01
  * @FilePath: \ainuo5213-decorators\src\core\parameter\index.ts
  * @Description:
  *
@@ -10,7 +10,12 @@
  */
 import { IncomingMessage } from 'http'
 import 'reflect-metadata'
-import { ICollected } from '../types'
+import {
+  ApiPropertyMetadataKey,
+  DesignParamTypesMetadataKey,
+  DesignTypeMetadataKey,
+  ICollected
+} from '../types'
 
 export type AsyncFunc = (...args: any[]) => Promise<any>
 export type Parameter = {
@@ -68,7 +73,11 @@ function addParameter(
   parameterName: string
 ): ParameterDecorator {
   return (target, propKey, paramIndex) => {
-    const paramType = Reflect.getMetadata('design:paramtypes', target, propKey)
+    const paramType = Reflect.getMetadata(
+      DesignParamTypesMetadataKey,
+      target,
+      propKey
+    )
 
     const parameter = {
       index: paramIndex,
@@ -107,8 +116,6 @@ export function generateParameterDecorator(
   }
 }
 
-export const ApiPropertyMetadataKey = Symbol('api-property')
-
 export type ApiPropertyType = {
   propertyType: Function
   propertyKey: string
@@ -117,7 +124,7 @@ export type ApiPropertyType = {
 export const ApiProperty = (): PropertyDecorator => {
   return (target, propKey) => {
     const propType = Reflect.getMetadata(
-      'design:type',
+      DesignTypeMetadataKey,
       target,
       propKey
     ) as Function

@@ -2,7 +2,7 @@
  * @Author: 孙永刚 1660998482@qq.com
  * @Date: 2022-10-16 09:33:31
  * @LastEditors: 孙永刚 1660998482@qq.com
- * @LastEditTime: 2022-10-28 21:34:07
+ * @LastEditTime: 2022-10-29 08:35:36
  * @FilePath: \ainuo5213-decorators\src\packages\middleware\index.ts
  * @Description:
  *
@@ -10,6 +10,7 @@
  */
 import 'reflect-metadata'
 import { AbstractMiddleware, MiddlewareType } from '../../core/middleware'
+import { MiddlewareMetadataKey } from '../../core/types'
 
 function checkTypeError(
   middlewares: MiddlewareType[],
@@ -34,7 +35,7 @@ export function InjectClassMiddleware(
     if (isError) {
       throw new TypeError('inject middleware error')
     } else {
-      Reflect.defineMetadata('middleware', middlewares, target)
+      Reflect.defineMetadata(MiddlewareMetadataKey, middlewares, target)
     }
   }
 }
@@ -49,7 +50,12 @@ export function InjectMethodMiddleware(
     if (isError) {
       throw new TypeError('inject middleware error')
     } else {
-      Reflect.defineMetadata('middlware', middlewares, descriptor.value!, key)
+      Reflect.defineMetadata(
+        MiddlewareMetadataKey,
+        middlewares,
+        descriptor.value!,
+        key
+      )
     }
   }
 }

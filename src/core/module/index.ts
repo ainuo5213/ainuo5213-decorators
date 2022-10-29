@@ -1,7 +1,22 @@
+/*
+ * @Author: 孙永刚 1660998482@qq.com
+ * @Date: 2022-10-15 17:01:04
+ * @LastEditors: 孙永刚 1660998482@qq.com
+ * @LastEditTime: 2022-10-29 08:32:35
+ * @FilePath: \ainuo5213-decorators\src\core\module\index.ts
+ * @Description:
+ *
+ * Copyright (c) 2022 by 孙永刚 1660998482@qq.com, All Rights Reserved.
+ */
 import 'reflect-metadata'
 import { BaseControllerResolver } from '../controller'
 import { MiddlewareType } from '../middleware'
-import { ICollected, ModuleOption } from '../types'
+import {
+  ICollected,
+  MiddlewareMetadataKey,
+  ModuleMetadataKey,
+  ModuleOption
+} from '../types'
 
 export class AppModule {}
 
@@ -30,7 +45,7 @@ export class BaseModuleResolver {
     const prototype = module.prototype
 
     const moduleOption = Reflect.getMetadata(
-      'module',
+      ModuleMetadataKey,
       prototype.constructor
     ) as ModuleOption | undefined
 
@@ -46,7 +61,7 @@ export class BaseModuleResolver {
     }
 
     moduleMiddlewares = moduleMiddlewares.concat(
-      (Reflect.getMetadata('middleware', prototype.constructor) as
+      (Reflect.getMetadata(MiddlewareMetadataKey, prototype.constructor) as
         | MiddlewareType[]
         | undefined) || []
     )

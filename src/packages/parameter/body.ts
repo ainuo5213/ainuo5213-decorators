@@ -2,7 +2,7 @@
  * @Author: 孙永刚 1660998482@qq.com
  * @Date: 2022-10-15 17:10:52
  * @LastEditors: 孙永刚 1660998482@qq.com
- * @LastEditTime: 2022-10-25 21:31:22
+ * @LastEditTime: 2022-10-29 08:33:37
  * @FilePath: \ainuo5213-decorators\src\packages\parameter\body.ts
  * @Description:
  *
@@ -11,13 +11,12 @@
 import { IncomingMessage } from 'http'
 import {
   AbstractParameterResolver,
-  ApiPropertyMetadataKey,
   ApiPropertyType,
   generateParameterDecorator,
   Parameter,
   ResolvedParameter
 } from '../../core/parameter'
-import { ICollected } from '../../core/types'
+import { ApiPropertyMetadataKey, ICollected } from '../../core/types'
 
 export const Body = generateParameterDecorator('body', false)
 
