@@ -2,7 +2,7 @@
  * @Author: 孙永刚 1660998482@qq.com
  * @Date: 2022-10-15 17:01:04
  * @LastEditors: 孙永刚 1660998482@qq.com
- * @LastEditTime: 2022-10-29 09:22:55
+ * @LastEditTime: 2022-10-29 09:29:12
  * @FilePath: \ainuo5213-decorators\src\core\controller\index.ts
  * @Description:
  *
@@ -41,16 +41,13 @@ export enum StatusCode {
   Success = 200
 }
 
-export type StatusCodeType = StatusCode
-
-export type JsonResult = {
-  data: string
-  statusCode: StatusCodeType
-}
-
-export type FileResult = {
-  data: Buffer
-  statusCode: StatusCodeType
+export class ControllerResult {
+  data: unknown
+  statusCode: StatusCode | number
+  constructor(data: unknown, statusCode: StatusCode | number) {
+    this.data = data
+    this.statusCode = statusCode
+  }
 }
 
 export class BaseController {
@@ -68,12 +65,9 @@ export class BaseController {
     return this.responseHeaders
   }
 
-  statusCode(result: { statusCode: StatusCodeType; data: unknown }) {
+  statusCode(result: { statusCode: StatusCode; data: unknown }) {
     this.responseHeaders.set('Content-Type', 'application/json')
-    return {
-      statusCode: result.statusCode,
-      data: JSON.stringify(result.data)
-    } as JsonResult
+    return new ControllerResult(result.data, result.statusCode)
   }
 
   notFound(data: unknown) {
@@ -136,6 +130,7 @@ export class BaseController {
       data
     })
   }
+
   file(data: Buffer, filename: string) {
     const fileExtension = extname(filename)
     let filenameWithoutExtension = ''
@@ -155,10 +150,7 @@ export class BaseController {
       'Content-Disposition'
     )
     this.responseHeaders.set('Content-Type', 'application/octet-stream')
-    return {
-      statusCode: StatusCode.Success,
-      data
-    } as FileResult
+    return new ControllerResult(data, StatusCode.Success)
   }
 }
 

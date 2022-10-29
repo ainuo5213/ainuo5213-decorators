@@ -11,20 +11,16 @@ import { MaybeNull } from '../module'
 import {
   BaseController,
   BaseControllerResolver,
-  StatusCodeType
+  ControllerResult
 } from '../controller'
 import {
   AbstractContainer,
   AbstractContainerBuilder,
   AbstractServiceProviderFactory
 } from '../dependency-injection/types'
-import {
-  ClassStruct,
-  ICollected,
-  ValidateMetadataKey,
-  ValidateMetadataName
-} from '../types'
+import { ICollected, ValidateMetadataKey, ValidateMetadataName } from '../types'
 import { AbstractValidationFilter, ValidateResult } from '../validate'
+import { ErrorResult, ParameterInValidateResult } from '../error'
 
 export type ParameterObjectType = {
   parameterValue: any
@@ -146,7 +142,14 @@ export default class Server<T extends Function = Function> {
         const { isMatched, collectedInfo } = this.isMatch(req)
 
         if (isMatched) {
-          await this.handleRequest(req, res, collectedInfo!)
+          try {
+            await this.handleRequest(req, res, collectedInfo!)
+          } catch (err) {
+            const error = err as Error
+            const errResult = new ErrorResult(error, collectedInfo!)
+            res.setHeader('Content-Type', 'application/json')
+            res.end(errResult.toString())
+          }
         } else {
           return res.end('not found')
         }
@@ -357,22 +360,30 @@ export default class Server<T extends Function = Function> {
     // 处理参数
     const parameters = await this.getInjectedParameter(req, res, info, instance)
     if (!Array.isArray(parameters) && !parameters.valid) {
-      // TODO: 参数校验的出口
-      res.setHeader('Content-Type', 'text/plain;charset=utf-8')
-      res.end(parameters.errorMessage)
+      res.setHeader('Content-Type', 'application/json')
+      const result = new ParameterInValidateResult(
+        info,
+        parameters.errorMessage
+      )
+      res.end(result.toString())
       return
     }
 
     await this.invokeMiddleware(req, res, info)
 
-    const result = (await Promise.resolve(
+    const result = await Promise.resolve(
       info.requestHandler.apply(
         instance,
         (parameters as ResolvedParameter[]).map((r) => {
           return r.parameterValue
         })
       )
-    )) as { statusCode: StatusCodeType; data: unknown }
+    )
+    if (!(result instanceof ControllerResult)) {
+      throw new Error(
+        `${info.requestHandler.name} return value is not instanceof ${ControllerResult.name}`
+      )
+    }
 
     res.statusCode = result.statusCode
     const headers = instance.getResponseHeaders()
