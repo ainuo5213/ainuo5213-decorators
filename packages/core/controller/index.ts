@@ -8,6 +8,8 @@ import {
 import { MiddlewareType } from '../middleware'
 import { AbstractParameterResolver, AsyncFunc, Parameter } from '../parameter'
 import {
+  AuthorizeContext,
+  AuthorizeMetadataKey,
   AutowiredMetadataPropKey,
   ClassStruct,
   DesignParamTypesMetadataKey,
@@ -176,7 +178,8 @@ export class BaseControllerResolver {
 
   resolve(
     controller: Function,
-    middlewares: MiddlewareType[] = []
+    middlewares: MiddlewareType[] = [],
+    moduleAnonymous: boolean = true
   ): ICollected[] {
     const prototype = controller.prototype
     const controllerDepdencies = this.getControllerDependencies(controller)
@@ -189,6 +192,10 @@ export class BaseControllerResolver {
       PathMetadataKey,
       prototype.constructor
     ) as string
+    const controllerAuthorizeContext = Reflect.getMetadata(
+      AuthorizeMetadataKey,
+      controller
+    ) as AuthorizeContext | undefined
 
     // 获取非构造函数的方法
     const methods = Reflect.ownKeys(prototype).filter(
@@ -205,6 +212,10 @@ export class BaseControllerResolver {
       const path = Reflect.getMetadata(PathMetadataKey, requestHandler) as
         | string
         | undefined
+      const methodAuthorizeContext = Reflect.getMetadata(
+        AuthorizeMetadataKey,
+        requestHandler
+      ) as AuthorizeContext | undefined
 
       // 获取方法上请求方法的元数据
       const requestMethod = Reflect.getMetadata(
@@ -254,7 +265,12 @@ export class BaseControllerResolver {
         requestHandlerParameters: parameters,
         middlewares: resultMiddlewares,
         requestController: controller,
-        dependencies: resultDependencies
+        dependencies: resultDependencies,
+        anonymous: methodAuthorizeContext
+          ? methodAuthorizeContext.anonymous
+          : controllerAuthorizeContext
+          ? controllerAuthorizeContext.anonymous
+          : moduleAnonymous
       } as ICollected)
     }
 

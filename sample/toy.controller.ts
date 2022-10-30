@@ -6,6 +6,7 @@ import { ToyService } from './toy.service'
 import { UserDTO } from './UserDTO'
 import { Post } from '../packages/route/post'
 import { Body } from '@ainuo5213/parameter'
+import { MethodAnonymous, MethodAuthorize } from '@ainuo5213/core/authorize'
 
 @InjectClassMiddleware(ControllerCorsMiddleware)
 @Controller('/toy')
@@ -14,6 +15,7 @@ export class ToyController extends BaseController {
     super()
   }
   @Post('/list')
+  @MethodAuthorize()
   async userList(@Body() userDTO: UserDTO) {
     const result = this.toyService.getObj()
     // const result = await promises.readFile(path.join(__dirname, './test.jpg'))

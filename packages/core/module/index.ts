@@ -2,6 +2,8 @@ import 'reflect-metadata'
 import { BaseControllerResolver } from '../controller'
 import { MiddlewareType } from '../middleware'
 import {
+  AuthorizeContext,
+  AuthorizeMetadataKey,
   ICollected,
   MiddlewareMetadataKey,
   ModuleMetadataKey,
@@ -23,15 +25,24 @@ export class BaseModuleResolver {
   }
   resolveController(
     controllerClass: Function,
-    middlewares: MiddlewareType[] = []
+    middlewares: MiddlewareType[] = [],
+    anonymous: boolean = true
   ): ICollected[] {
     if (!this.controllerResolver) {
       throw new Error('controller resolver is not defined')
     }
 
-    return this.controllerResolver.resolve(controllerClass, middlewares)
+    return this.controllerResolver.resolve(
+      controllerClass,
+      middlewares,
+      anonymous
+    )
   }
-  resolve(module: Function, middlewares: MiddlewareType[] = []): ICollected[] {
+  resolve(
+    module: Function,
+    middlewares: MiddlewareType[] = [],
+    anonymous: boolean = true
+  ): ICollected[] {
     const prototype = module.prototype
 
     const moduleOption = Reflect.getMetadata(
@@ -43,6 +54,11 @@ export class BaseModuleResolver {
     if (!moduleOption) {
       return collectedData
     }
+
+    const moduleAuthorizeContext = Reflect.getMetadata(
+      AuthorizeMetadataKey,
+      module
+    ) as AuthorizeContext | undefined
 
     let moduleMiddlewares: MiddlewareType[] = []
 
@@ -58,12 +74,28 @@ export class BaseModuleResolver {
 
     if (moduleOption?.controllers?.length) {
       moduleOption.controllers.forEach((r) => {
-        collectedData.push(...this.resolveController(r, moduleMiddlewares))
+        collectedData.push(
+          ...this.resolveController(
+            r,
+            moduleMiddlewares,
+            moduleAuthorizeContext
+              ? moduleAuthorizeContext.anonymous
+              : anonymous
+          )
+        )
       })
     }
     if (moduleOption?.modules?.length) {
       moduleOption.modules.forEach((r) => {
-        collectedData.push(...this.resolve(r, moduleMiddlewares))
+        collectedData.push(
+          ...this.resolve(
+            r,
+            moduleMiddlewares,
+            moduleAuthorizeContext
+              ? moduleAuthorizeContext.anonymous
+              : anonymous
+          )
+        )
       })
     }
 

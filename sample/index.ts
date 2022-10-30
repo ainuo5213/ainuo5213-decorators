@@ -6,6 +6,7 @@ import {
   ParamParameterResolver,
   QueryParameterResolver
 } from '@ainuo5213/parameter'
+import { AuthorizeHandler } from './AuthorizeHandler'
 import { ErrorHandler } from './ErrorHandler'
 import IndexModule from './index.module'
 
@@ -18,7 +19,7 @@ async function bootstrap() {
     .useParameterResolver(new BodyParameterResolver())
     .useParameterResolver(new ParamParameterResolver())
     .useParameterResolver(new ModelQueryParameterResolver())
-    .useActionHandler(new ErrorHandler())
+    .useActionHandler(new ErrorHandler(), new AuthorizeHandler())
     .listen(3000)
   console.log('当前服务运行在3000')
 }

@@ -21,6 +21,7 @@ import {
 } from '../dependency-injection/types'
 import {
   AbstractHandler,
+  AuthorizeHandlerName,
   ErrorCapturedHandlerName,
   ICollected,
   ParameterInvalidateHandlerName,
@@ -33,6 +34,7 @@ import {
   ErrorResult,
   ParameterInValidateResult
 } from '../error'
+import { AbstractAuthorizeHandler } from '../authorize'
 
 export type ParameterObjectType = {
   parameterValue: any
@@ -408,6 +410,13 @@ export class Server<T extends Function = Function> {
       info.requestController.name
     )
 
+    if (!info.anonymous) {
+      const result = await this.handleAuthorize(req, res)
+      if (!result) {
+        return
+      }
+    }
+
     // 处理参数
     const parameters = await this.getInjectedParameter(req, info, instance)
     if (!Array.isArray(parameters) && !parameters.valid) {
@@ -447,6 +456,16 @@ export class Server<T extends Function = Function> {
     res.writeHead(result.statusCode, headerObj)
     res.end(result.data)
   }
+  private async handleAuthorize(req: IncomingMessage, res: ServerResponse) {
+    const authorizeHandler = this.handlers.get(AuthorizeHandlerName) as
+      | AbstractAuthorizeHandler
+      | undefined
+    if (authorizeHandler) {
+      return await authorizeHandler.handle(res, req)
+    } else {
+      throw new Error('no handler AuthorizeHandler implemented or used')
+    }
+  }
   private handleParameterInValidate(
     res: ServerResponse,
     info: ICollected,
@@ -454,7 +473,7 @@ export class Server<T extends Function = Function> {
   ) {
     const parameterInValidateHandler = this.handlers.get(
       ParameterInvalidateHandlerName
-    ) as AbstractParameterInValidateHandler
+    ) as AbstractParameterInValidateHandler | undefined
     if (parameterInValidateHandler) {
       parameterInValidateHandler.handle(res, valiadteResult.errorMessage)
     } else {

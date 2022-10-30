@@ -25,6 +25,7 @@ export interface ICollected {
   middlewares: MiddlewareType[]
   requestController: typeof BaseController
   dependencies: Map<string, ServiceValue>
+  anonymous: boolean
 }
 
 export const PathMetadataKey = Symbol('path')
@@ -41,7 +42,13 @@ export const ValidateMetadataProperty = Symbol('parameter-validation-property')
 
 export const ParameterInvalidateHandlerName = Symbol('parameter-invalidate')
 export const ErrorCapturedHandlerName = Symbol('error-captured')
+export const AuthorizeHandlerName = Symbol('authorization')
+export const AuthorizeMetadataKey = Symbol('authorize')
 export abstract class AbstractHandler {
   abstract readonly __flag: Symbol
   abstract handle(res: ServerResponse, ...args: any[]): void
+}
+
+export type AuthorizeContext = {
+  anonymous: boolean
 }
