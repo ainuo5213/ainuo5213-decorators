@@ -1,0 +1,21 @@
+{
+  "name": "sample",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.ts",
+  "scripts": {
+    "dev": "ts-node ./index.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^18.11.7"
+  },
+  "dependencies": {
+    "@ainuo5213/core": "workspace:^1.0.0",
+    "@ainuo5213/parameter": "workspace:^1.0.0",
+    "@ainuo5213/route": "workspace:^1.0.0",
+    "@ainuo5213/validate": "workspace:^1.0.0"
+  }
+}

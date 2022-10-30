@@ -1,5 +1,4 @@
-import { Lifecycle } from '../src/core/dependency-injection/types'
-import { Inject } from '../src/core/dependency-injection/inject'
+import { Inject, Lifecycle } from '@ainuo5213/core'
 
 @Inject({
   lifecycle: Lifecycle.scoped

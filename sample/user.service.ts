@@ -1,7 +1,5 @@
-import { Lifecycle } from '../src/core/dependency-injection/types'
-import { Inject } from '../src/core/dependency-injection/inject'
+import { Autowired, Inject, Lifecycle } from '@ainuo5213/core'
 import { UserDao } from './user.dao'
-import { Autowired } from '../src/core/dependency-injection/autowired'
 
 @Inject({
   lifecycle: Lifecycle.scoped

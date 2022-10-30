@@ -1,0 +1,16 @@
+{
+  "name": "@ainuo5213/validate",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@ainuo5213/core": "workspace:^1.0.0",
+    "reflect-metadata": "^0.1.13"
+  }
+}

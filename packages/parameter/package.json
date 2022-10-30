@@ -1,0 +1,21 @@
+{
+  "name": "@ainuo5213/parameter",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^18.11.7",
+    "@types/qs": "^6.9.7"
+  },
+  "dependencies": {
+    "@ainuo5213/core": "workspace:^1.0.0",
+    "qs": "^6.11.0",
+    "reflect-metadata": "^0.1.13"
+  }
+}

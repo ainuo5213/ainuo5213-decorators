@@ -1,32 +1,26 @@
 {
-  "name": "ainuo-decorators",
-  "version": "1.0.0-beta.1",
-  "description": "类似nest装饰器写法的请求源码demo",
-  "main": "index.js",
+  "name": "ainuo-monorepo",
+  "version": "1.0.0",
+  "description": "",
   "scripts": {
-    "dev": "nodemon ./sample/index.ts",
-    "build": "tsc"
+    "build": "concurrently \"npm run build:core\" \"npm run build:parameter\" \"npm run build:route\" \"npm run build:validate\"",
+    "build:core": "yarn build --prefix ./packages/core",
+    "build:parameter": "yarn build --prefix ./packages/parameter",
+    "build:route": "yarn build --prefix ./packages/route",
+    "build:validate": "yarn build --prefix ./packages/validate"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ainuo5213/ainuo-decorators.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "bugs": {
     "url": "https://github.com/ainuo5213/ainuo-decorators/issues"
   },
   "homepage": "https://github.com/ainuo5213/ainuo-decorators#readme",
-  "dependencies": {
-    "@types/multiparty": "^0.0.33",
-    "@types/qs": "^6.9.7",
-    "multiparty": "^4.2.3",
-    "nodemon": "^2.0.20",
-    "qs": "^6.11.0",
-    "reflect-metadata": "^0.1.13"
-  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
   "devDependencies": {
-    "@types/node": "^18.7.14"
+    "concurrently": "^7.5.0"
   }
 }

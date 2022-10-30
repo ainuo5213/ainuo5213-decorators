@@ -1,0 +1,123 @@
+lockfileVersion: 5.4
+
+importers:
+
+  .:
+    specifiers: {}
+
+  packages/core:
+    specifiers:
+      '@types/node': ^18.11.7
+      reflect-metadata: ^0.1.13
+    dependencies:
+      reflect-metadata: 0.1.13
+    devDependencies:
+      '@types/node': 18.11.7
+
+  packages/parameter:
+    specifiers:
+      '@ainuo5213/core': workspace:^1.0.0
+      '@types/node': ^18.11.7
+      '@types/qs': ^6.9.7
+      qs: ^6.11.0
+      reflect-metadata: ^0.1.13
+    dependencies:
+      '@ainuo5213/core': link:../core
+      qs: 6.11.0
+      reflect-metadata: 0.1.13
+    devDependencies:
+      '@types/node': 18.11.7
+      '@types/qs': 6.9.7
+
+  packages/route:
+    specifiers:
+      '@ainuo5213/core': workspace:^1.0.0
+    dependencies:
+      '@ainuo5213/core': link:../core
+
+  packages/validate:
+    specifiers:
+      '@ainuo5213/core': workspace:^1.0.0
+      reflect-metadata: ^0.1.13
+    dependencies:
+      '@ainuo5213/core': link:../core
+      reflect-metadata: 0.1.13
+
+  sample:
+    specifiers:
+      '@ainuo5213/core': workspace:^1.0.0
+      '@ainuo5213/parameter': workspace:^1.0.0
+      '@ainuo5213/route': workspace:^1.0.0
+      '@ainuo5213/validate': workspace:^1.0.0
+      '@types/node': ^18.11.7
+    dependencies:
+      '@ainuo5213/core': link:../packages/core
+      '@ainuo5213/parameter': link:../packages/parameter
+      '@ainuo5213/route': link:../packages/route
+      '@ainuo5213/validate': link:../packages/validate
+    devDependencies:
+      '@types/node': 18.11.7
+
+packages:
+
+  /@types/node/18.11.7:
+    resolution: {integrity: sha512-LhFTglglr63mNXUSRYD8A+ZAIu5sFqNJ4Y2fPuY7UlrySJH87rRRlhtVmMHplmfk5WkoJGmDjE9oiTfyX94CpQ==}
+    dev: true
+
+  /@types/qs/6.9.7:
+    resolution: {integrity: sha512-FGa1F62FT09qcrueBA6qYTrJPVDzah9a+493+o2PCXsesWHIn27G98TsSMs3WPNbZIEj4+VJf6saSFpvD+3Zsw==}
+    dev: true
+
+  /call-bind/1.0.2:
+    resolution: {integrity: sha512-7O+FbCihrB5WGbFYesctwmTKae6rOiIzmz1icreWJ+0aA7LJfuqhEso2T9ncpcFtzMQtzXf2QGGueWJGTYsqrA==}
+    dependencies:
+      function-bind: 1.1.1
+      get-intrinsic: 1.1.3
+    dev: false
+
+  /function-bind/1.1.1:
+    resolution: {integrity: sha512-yIovAzMX49sF8Yl58fSCWJ5svSLuaibPxXQJFLmBObTuCr0Mf1KiPopGM9NiFjiYBCbfaa2Fh6breQ6ANVTI0A==}
+    dev: false
+
+  /get-intrinsic/1.1.3:
+    resolution: {integrity: sha512-QJVz1Tj7MS099PevUG5jvnt9tSkXN8K14dxQlikJuPt4uD9hHAHjLyLBiLR5zELelBdD9QNRAXZzsJx0WaDL9A==}
+    dependencies:
+      function-bind: 1.1.1
+      has: 1.0.3
+      has-symbols: 1.0.3
+    dev: false
+
+  /has-symbols/1.0.3:
+    resolution: {integrity: sha512-l3LCuF6MgDNwTDKkdYGEihYjt5pRPbEg46rtlmnSPlUbgmB8LOIrKJbYYFBSbnPaJexMKtiPO8hmeRjRz2Td+A==}
+    engines: {node: '>= 0.4'}
+    dev: false
+
+  /has/1.0.3:
+    resolution: {integrity: sha512-f2dvO0VU6Oej7RkWJGrehjbzMAjFp5/VKPp5tTpWIV4JHHZK1/BxbFRtf/siA2SWTe09caDmVtYYzWEIbBS4zw==}
+    engines: {node: '>= 0.4.0'}
+    dependencies:
+      function-bind: 1.1.1
+    dev: false
+
+  /object-inspect/1.12.2:
+    resolution: {integrity: sha512-z+cPxW0QGUp0mcqcsgQyLVRDoXFQbXOwBaqyF7VIgI4TWNQsDHrBpUQslRmIfAoYWdYzs6UlKJtB2XJpTaNSpQ==}
+    dev: false
+
+  /qs/6.11.0:
+    resolution: {integrity: sha512-MvjoMCJwEarSbUYk5O+nmoSzSutSsTwF85zcHPQ9OrlFoZOYIjaqBAJIqIXjptyD5vThxGq52Xu/MaJzRkIk4Q==}
+    engines: {node: '>=0.6'}
+    dependencies:
+      side-channel: 1.0.4
+    dev: false
+
+  /reflect-metadata/0.1.13:
+    resolution: {integrity: sha512-Ts1Y/anZELhSsjMcU605fU9RE4Oi3p5ORujwbIKXfWa+0Zxs510Qrmrce5/Jowq3cHSZSJqBjypxmHarc+vEWg==}
+    dev: false
+
+  /side-channel/1.0.4:
+    resolution: {integrity: sha512-q5XPytqFEIKHkGdiMIrY10mvLRvnQh42/+GoBlFW3b2LXLE2xxJpZFdm94we0BaoV3RwJyGqg5wS7epxTv0Zvw==}
+    dependencies:
+      call-bind: 1.0.2
+      get-intrinsic: 1.1.3
+      object-inspect: 1.12.2
+    dev: false

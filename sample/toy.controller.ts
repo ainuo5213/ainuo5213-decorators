@@ -1,26 +1,11 @@
-/*
- * @Author: 孙永刚 1660998482@qq.com
- * @Date: 2022-10-15 17:01:04
- * @LastEditors: 孙永刚 1660998482@qq.com
- * @LastEditTime: 2022-10-29 20:23:35
- * @FilePath: \ainuo5213-decorators\sample\toy.controller.ts
- * @Description:
- *
- * Copyright (c) 2022 by 孙永刚 1660998482@qq.com, All Rights Reserved.
- */
-import { BaseController } from '../src/core/controller'
-import { Controller } from '../src/packages/controller/controller'
-import { ModelQuery, Query } from '../src/packages/parameter/query'
-import { Get } from '../src/packages/route/get'
-import { Post } from '../src/packages/route/post'
-import { ToyService } from './toy.service'
-import { Body } from '../src/packages/parameter/body'
-import { UserDTO } from './UserDTO'
-import { Autowired } from '../src/core/dependency-injection/autowired'
-import { InjectClassMiddleware } from '../src/packages/middleware'
+import { BaseController } from '@ainuo5213/core'
+import { InjectClassMiddleware } from '@ainuo5213/core'
+import { Controller } from '@ainuo5213/core'
 import { ControllerCorsMiddleware } from './CorsMiddleware'
-import { promises } from 'fs'
-import path from 'path'
+import { ToyService } from './toy.service'
+import { UserDTO } from './UserDTO'
+import { Post } from '../packages/route/post'
+import { Body } from '@ainuo5213/parameter'
 
 @InjectClassMiddleware(ControllerCorsMiddleware)
 @Controller('/toy')
