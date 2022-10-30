@@ -193,9 +193,9 @@ export class Server<T extends Function = Function> {
     res: ServerResponse,
     collectedInfo: ICollected
   ) {
-    const errorCapturedHandler = this.handlers.get(
-      ErrorCapturedHandlerName
-    ) as AbstractErrorHandler
+    const errorCapturedHandler = this.handlers.get(ErrorCapturedHandlerName) as
+      | AbstractErrorHandler
+      | undefined
     if (errorCapturedHandler) {
       errorCapturedHandler.handle(res, err)
     } else {

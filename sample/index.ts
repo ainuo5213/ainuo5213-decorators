@@ -19,7 +19,7 @@ async function bootstrap() {
     .useParameterResolver(new BodyParameterResolver())
     .useParameterResolver(new ParamParameterResolver())
     .useParameterResolver(new ModelQueryParameterResolver())
-    .useActionHandler(new ErrorHandler(), new AuthorizeHandler())
+    .useActionHandler(new ErrorHandler())
     .listen(3000)
   console.log('当前服务运行在3000')
 }
