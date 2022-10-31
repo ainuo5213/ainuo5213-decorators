@@ -1,3 +1,12 @@
 {
-  "extends": "../../tsconfig.json"
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/core",
+    "outFile": "../../dist/core/index.js",
+    "noEmit": false,
+    "sourceMap": true,
+    "module": "CommonJS",
+    "target": "ES6",
+    "lib": ["ES6"]
+  }
 }
