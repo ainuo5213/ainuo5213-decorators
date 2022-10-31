@@ -6,7 +6,7 @@ import { ToyService } from './toy.service'
 import { UserDTO } from './UserDTO'
 import { Post } from '../packages/route/post'
 import { Body, Query } from '@ainuo5213/parameter'
-import { MethodAnonymous, MethodAuthorize } from '@ainuo5213/core/authorize'
+import { MethodAnonymous, MethodAuthorize } from '@ainuo5213/core'
 import { get } from 'http'
 import { Get } from '@ainuo5213/route'
 
