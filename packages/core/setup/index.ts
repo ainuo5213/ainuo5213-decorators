@@ -1,4 +1,4 @@
-import http, { IncomingMessage, ServerResponse } from 'http'
+import { IncomingMessage, ServerResponse, createServer } from 'http'
 import { parse as parseUrl } from 'url'
 import {
   AbstractParameterInValidateHandler,
@@ -167,26 +167,24 @@ export class Server<T extends Function = Function> {
   }
 
   public async listen(port: number) {
-    http
-      .createServer(async (req, res) => {
-        const { isMatched, collectedInfo } = this.isMatch(req)
-        res.on('finish', () => {
-          this.container.dispose()
-        })
-
-        if (isMatched) {
-          try {
-            await this.handleRequest(req, res, collectedInfo!)
-            return
-          } catch (err) {
-            this.handleError(err, res, collectedInfo!)
-            return
-          }
-        } else {
-          return res.end('not found')
-        }
+    createServer(async (req, res) => {
+      const { isMatched, collectedInfo } = this.isMatch(req)
+      res.on('finish', () => {
+        this.container.dispose()
       })
-      .listen(port)
+
+      if (isMatched) {
+        try {
+          await this.handleRequest(req, res, collectedInfo!)
+          return
+        } catch (err) {
+          this.handleError(err, res, collectedInfo!)
+          return
+        }
+      } else {
+        return res.end('not found')
+      }
+    }).listen(port)
   }
   private handleError(
     err: unknown,
@@ -377,7 +375,7 @@ export class Server<T extends Function = Function> {
     return false
   }
 
-  private async invokeMiddleware(req: http.IncomingMessage, info: ICollected) {
+  private async invokeMiddleware(req: IncomingMessage, info: ICollected) {
     if (info.middlewares.length) {
       const next = async () => {
         const middleware = info.middlewares.shift()
@@ -402,8 +400,8 @@ export class Server<T extends Function = Function> {
   }
 
   private async handleRequest(
-    req: http.IncomingMessage,
-    res: http.ServerResponse,
+    req: IncomingMessage,
+    res: ServerResponse,
     info: ICollected
   ) {
     const instance: BaseController = this.container.resolve(
