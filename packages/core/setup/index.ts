@@ -485,7 +485,7 @@ export class Server<T extends Function = Function> {
   }
 
   private async getInjectedParameter(
-    req: http.IncomingMessage,
+    req: IncomingMessage,
     info: ICollected,
     controllerInstance: BaseController
   ): Promise<ResolvedParameter[] | ValidateResult> {
