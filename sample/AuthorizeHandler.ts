@@ -6,16 +6,16 @@ export class AuthorizeHandler extends AbstractAuthorizeHandler {
     res: ServerResponse<IncomingMessage>,
     req: IncomingMessage
   ): Promise<boolean> {
-    if (!req.headers['ainuo5213']) {
-      res.setHeader('Content-Type', 'application/json')
-      res.end(
-        JSON.stringify({
-          code: 0,
-          message: '用户认证失败'
-        })
-      )
-      return false
-    }
+    // if (!req.headers['ainuo5213']) {
+    //   res.setHeader('Content-Type', 'application/json')
+    //   res.end(
+    //     JSON.stringify({
+    //       code: 0,
+    //       message: '用户认证失败'
+    //     })
+    //   )
+    //   return false
+    // }
     return true
   }
 }

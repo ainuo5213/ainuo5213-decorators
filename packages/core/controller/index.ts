@@ -59,7 +59,7 @@ export class BaseController {
 
   statusCode(result: { statusCode: StatusCode; data: unknown }) {
     this.responseHeaders.set('Content-Type', 'application/json')
-    return new ControllerResult(result.data, result.statusCode)
+    return new ControllerResult(JSON.stringify(result.data), result.statusCode)
   }
 
   notFound(data: unknown) {

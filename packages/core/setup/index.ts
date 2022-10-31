@@ -438,20 +438,16 @@ export class Server<T extends Function = Function> {
       this.handleError(err, res, info)
       return
     }
-
     if (!(result instanceof ControllerResult)) {
       throw new Error(
         `${info.requestHandler.name} return value is not instanceof ${ControllerResult.name}`
       )
     }
-
     res.statusCode = result.statusCode
     const headers = instance.getResponseHeaders()
-    const headerObj: Record<string, string> = {}
     headers.forEach((value: string, key: string) => {
-      headerObj[key] = value
+      res.setHeader(key, value)
     })
-    res.writeHead(result.statusCode, headerObj)
     res.end(result.data)
   }
   private async handleAuthorize(req: IncomingMessage, res: ServerResponse) {

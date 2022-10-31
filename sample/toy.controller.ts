@@ -5,8 +5,10 @@ import { ControllerCorsMiddleware } from './CorsMiddleware'
 import { ToyService } from './toy.service'
 import { UserDTO } from './UserDTO'
 import { Post } from '../packages/route/post'
-import { Body } from '@ainuo5213/parameter'
+import { Body, Query } from '@ainuo5213/parameter'
 import { MethodAnonymous, MethodAuthorize } from '@ainuo5213/core/authorize'
+import { get } from 'http'
+import { Get } from '@ainuo5213/route'
 
 @InjectClassMiddleware(ControllerCorsMiddleware)
 @Controller('/toy')
@@ -14,11 +16,14 @@ export class ToyController extends BaseController {
   constructor(private toyService: ToyService) {
     super()
   }
-  @Post('/list')
+  @Get('/list')
   @MethodAuthorize()
-  async userList(@Body() userDTO: UserDTO) {
+  async userList(@Query('id') id: string) {
     const result = this.toyService.getObj()
     // const result = await promises.readFile(path.join(__dirname, './test.jpg'))
-    return result
+    return this.success({
+      result,
+      id
+    })
   }
 }
