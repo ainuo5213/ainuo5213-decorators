@@ -12,7 +12,6 @@ export class ErrorResult {
     const res = {
       route: this.info.path,
       method: this.info.requestMethod,
-      cause: this.error.cause,
       message: this.error.message,
       stack: this.error.stack
     }
