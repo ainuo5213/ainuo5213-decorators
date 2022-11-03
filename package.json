@@ -3,7 +3,11 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "build": "webpack ./webpack.config.js"
+    "build": "concurrently \"npm run build:core\" \"npm run build:parameter\" \"npm run build:route\" \"npm run build:validate\"",
+    "build:core": "yarn --cwd ./packages/core build",
+    "build:parameter": "yarn --cwd ./packages/parameter build",
+    "build:route": "yarn --cwd ./packages/route build",
+    "build:validate": "yarn --cwd ./packages/validate build"
   },
   "repository": {
     "type": "git",
@@ -17,11 +21,6 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "clean-webpack-plugin": "^4.0.0",
-    "concurrently": "^7.5.0",
-    "path-browserify": "^1.0.1",
-    "ts-loader": "^9.4.1",
-    "webpack": "^5.74.0",
-    "webpack-cli": "^4.10.0"
+    "concurrently": "^7.5.0"
   }
 }
