@@ -2,9 +2,9 @@
   "name": "@ainuo5213/route",
   "version": "1.0.0",
   "description": "",
-  "main": "index.ts",
+  "main": "./src/index.ts",
   "scripts": {
-    "build": "tsc ./index.ts"
+    "build": "tsc ./src/index.ts"
   },
   "keywords": [],
   "author": "",
